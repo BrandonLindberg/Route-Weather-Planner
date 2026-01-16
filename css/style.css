@@ -1,0 +1,153 @@
+/* Reset & Basics */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body, html {
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* Prevent scrolling, map handles movement */
+}
+
+/* Layout */
+.app-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: 350px;
+    background: #ffffff;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    z-index: 1000; /* Sit above the map */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.logo-area h1 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+}
+.logo-area p {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+/* Control Groups */
+.control-group {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.control-group h3 {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #95a5a6;
+    letter-spacing: 1px;
+}
+
+/* Inputs & Buttons */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.button-group {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+/* Specific Button Styles */
+#btn-street, #btn-satellite {
+    flex: 1;
+    background: #e2e6ea;
+    color: #333;
+}
+
+#btn-street.active, #btn-satellite.active {
+    background: #3498db;
+    color: white;
+}
+
+#btn-radar {
+    width: 100%;
+    background: #8e44ad;
+    color: white;
+    margin-top: 5px;
+}
+
+.action-btn {
+    width: 100%;
+    background: #27ae60;
+    color: white;
+    padding: 12px;
+    font-size: 1rem;
+}
+
+.secondary-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+    margin-top: 10px;
+}
+
+/* Pin List */
+.pin-list {
+    list-style: none;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.pin-item {
+    padding: 8px;
+    background: white;
+    border-bottom: 1px solid #eee;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.empty-state {
+    color: #aaa;
+    font-style: italic;
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 10px 0;
+}
+
+/* Map Container */
+#map-container {
+    flex-grow: 1; /* Take up remaining space */
+    background: #dfe6e9; /* Placeholder color before map loads */
+    position: relative;
+}
