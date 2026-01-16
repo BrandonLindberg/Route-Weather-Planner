@@ -151,3 +151,8 @@ button {
     background: #dfe6e9; /* Placeholder color before map loads */
     position: relative;
 }
+
+#map {
+    height: 100vh;   /* full-screen map */
+    margin: 0;
+}

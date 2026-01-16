@@ -13,7 +13,11 @@ function initMap() {
     
     // Event Listener: Allow users to click on the map to drop a pin
     // map.on('click', function(e) { addPin(e.latlng); });
-    
+    const map = L.map('map-container').setView([43.8260, -111.7897], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
     console.log("Map initialized.");
 }
 
