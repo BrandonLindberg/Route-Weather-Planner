@@ -4,6 +4,12 @@ let currentLayer;       // Holds the current tile layer (Street vs Satellite)
 let markers = [];       // Array to store all our pin objects
 let routePath;          // Object to store the drawn route line
 
+// DOM variables
+const confirmRouteBtn = document.getElementById('floating-confirm-btn');
+const clearPinsBtn = document.getElementById('floating-clear-btn');
+confirmRouteBtn.addEventListener('click', planRouteMap);
+clearPinsBtn.addEventListener('click', clearAllPins);
+
 // 1. INITIALIZATION
 // This function runs when the page loads to set up the map
 function initMap() {
@@ -12,12 +18,18 @@ function initMap() {
     // TODO: Add the default "Street" tile layer (using OpenStreetMap)
     
     // Event Listener: Allow users to click on the map to drop a pin
-    // map.on('click', function(e) { addPin(e.latlng); });
-    const map = L.map('map-container').setView([43.8260, -111.7897], 13);
+    // map.on('click', function(e) { addPin(e.latlng.lat, e.latlng.lng); });
+
+    // inits map
+    map = L.map('map-container', {doubleClickZoom: false}).setView([43.8260, -111.7897], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 17,
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+    
+    // adds up to 5 markers
+    map.on('dblclick', (e) => addPin(e));
+    
     console.log("Map initialized.");
 }
 
@@ -45,13 +57,22 @@ function toggleRadar() {
 
 // 3. PINS & LOCATIONS
 // Adds a marker to the map and stores it in our list
-function addPin(lat, lng, label = "Custom Location") {
+function addPin(e) {
     // TODO: Create a Leaflet marker at [lat, lng]
     // TODO: Bind a popup to the marker with the label
     // TODO: Add marker to the 'markers' array
-    
-    // Call function to fetch weather for this specific pin
-    getWeatherForLocation(lat, lng);
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+    const crds = [lat, lng];
+    if (markers.length < 5) {
+        const markerObj = {};
+        const marker = L.marker(crds);
+        markerObj.marker = marker;
+        markerObj.crds = crds;
+        
+        markers.push(markerObj);
+        markerObj.marker.addTo(map);
+    }
     
     // Update the HTML list in the sidebar
     updatePinListUI();
@@ -60,6 +81,11 @@ function addPin(lat, lng, label = "Custom Location") {
 function clearAllPins() {
     // TODO: Loop through 'markers' array and remove each from map
     // TODO: Clear the array
+    markers.forEach((marker) => {
+        marker.marker.remove();
+    });
+    markers = [];
+    map.removeControl(routePath);
     console.log("Map cleared.");
 }
 
@@ -69,7 +95,18 @@ function updatePinListUI() {
 }
 
 // 4. ROUTING (The "Trip Planning" requirement)
-function planRoute() {
+function planRouteMap() {
+    const waypointCrds = markers.map(marker => {
+        return L.latLng(marker.crds[0], marker.crds[1]);
+    })
+
+    routePath = L.Routing.control({
+        waypoints: waypointCrds,
+        routeWhileDragging: true
+    }).addTo(map);
+}
+
+function planRouteUI() {
     const start = document.getElementById('start-loc').value;
     const end = document.getElementById('end-loc').value;
 
@@ -91,9 +128,16 @@ function planRoute() {
 // 5. WEATHER DATA integration
 // Fetches data from Open-Meteo or NWS
 function getWeatherForLocation(lat, lng) {
-    // TODO: Fetch data from API: https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}
-    // TODO: On success, update the marker's popup with Temp/Condition
     console.log(`Fetching weather for ${lat}, ${lng}...`);
+    
+    // TODO: Fetch data from API: https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}`)
+        .then(response => response.json())
+        .then(data => {
+            console.dir(data);
+            return data;
+        });
+    // TODO: On success, update the marker's popup with Temp/Condition
 }
 
 function checkWeatherAlongRoute() {

@@ -156,3 +156,17 @@ button {
     height: 100vh;   /* full-screen map */
     margin: 0;
 }
+
+/* Floating Buttons (floats over map to handle pins and route) */
+.floating-btns {
+    position: absolute;
+    bottom: 10px;    
+    right: 10px;  
+    z-index: 1000;
+    padding: 10px;
+    background: white;
+    /* background: #3B82F6; */
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 4px;
+    cursor: pointer;
+}
