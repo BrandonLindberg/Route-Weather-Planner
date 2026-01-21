@@ -1,5 +1,6 @@
 // Global Variables to store map state
-let map;                // The map object
+let map;                // The Leaflet map object
+let currentTileLayer;   // Holds the current tile layer object
 let currentLayer;       // Holds the current tile layer (Street vs Satellite)
 let markers = [];       // Array to store all our pin objects
 let routePath;          // Object to store the drawn route line
@@ -13,6 +14,7 @@ clearPinsBtn.addEventListener('click', clearAllPins);
 // 1. INITIALIZATION
 // This function runs when the page loads to set up the map
 function initMap() {
+<<<<<<< HEAD
     // TODO: Initialize Leaflet map targeting the 'map-container' div
     // TODO: Set default view to a central location (e.g., USA)
     // TODO: Add the default "Street" tile layer (using OpenStreetMap)
@@ -30,23 +32,61 @@ function initMap() {
     // adds up to 5 markers
     map.on('dblclick', (e) => addPin(e));
     
+=======
+    // 1. Initialize map centered on US
+    map = L.map('map-container').setView([43.8260, -111.7897], 13);
+
+    // 2. Load the default "Street" layer
+    addStreetLayer();
+
+    // 3. Add click listener for pins
+    map.on('click', function(e) {
+        addPin(e.latlng.lat, e.latlng.lng, "Dropped Pin");
+    });
+
+>>>>>>> 525ff796d57d886e7cb15366007c544683793a0a
     console.log("Map initialized.");
 }
 
-// 2. MAP LAYERS (The "Satellite View" requirement)
+// 2. MAP LAYERS
+// Adds the standard street view layer to the map
+function addStreetLayer() {
+    // If a layer already exists, remove it so they don't stack up (becasue that is inefficient)
+    if (currentTileLayer) {
+        map.removeLayer(currentTileLayer);
+    }
+
+    // Load OpenStreetMap (Street View)
+    currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+    console.log("Map initialized.");
+
+    // Update buttons
+    document.getElementById('btn-street').classList.add('active');
+    document.getElementById('btn-satellite').classList.remove('active');
+}
+
 // Switches between standard street view and satellite imagery
 function switchLayer(layerType) {
-    // TODO: Remove the currentLayer from the map
-    
-    if (layerType === 'satellite') {
-        // TODO: Load NASA GIBS or Esri Satellite tiles
-        // TODO: Update button styles to show Satellite is active
-    } else {
-        // TODO: Load OpenStreetMap tiles
-        // TODO: Update button styles to show Street is active
+    if (layerType === 'street') {
+        addStreetLayer();
+    } else if (layerType === 'satellite') {
+        // If a layer exists, remove it
+        if (currentTileLayer) {
+            map.removeLayer(currentTileLayer);
+        }
+
+        // LOAD THE SATELLITE LAYER (Esri World Imagery (not nasa lol))
+        currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+        }).addTo(map);
+
+        // Update buttons
+        document.getElementById('btn-satellite').classList.add('active');
+        document.getElementById('btn-street').classList.remove('active');
     }
-    
-    console.log(`Switched to ${layerType} view.`);
 }
 
 function toggleRadar() {
