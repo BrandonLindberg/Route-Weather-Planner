@@ -8,13 +8,14 @@ let routePath;          // Object to store the drawn route line
 // DOM variables
 const confirmRouteBtn = document.getElementById('floating-confirm-btn');
 const clearPinsBtn = document.getElementById('floating-clear-btn');
+const getWeatherBtn = document.getElementById('floating-weather-btn');
 confirmRouteBtn.addEventListener('click', planRouteMap);
 clearPinsBtn.addEventListener('click', clearAllPins);
+getWeatherBtn.addEventListener('click', getWeatherForLocation);
 
 // 1. INITIALIZATION
 // This function runs when the page loads to set up the map
 function initMap() {
-<<<<<<< HEAD
     // TODO: Initialize Leaflet map targeting the 'map-container' div
     // TODO: Set default view to a central location (e.g., USA)
     // TODO: Add the default "Street" tile layer (using OpenStreetMap)
@@ -32,19 +33,6 @@ function initMap() {
     // adds up to 5 markers
     map.on('dblclick', (e) => addPin(e));
     
-=======
-    // 1. Initialize map centered on US
-    map = L.map('map-container').setView([43.8260, -111.7897], 13);
-
-    // 2. Load the default "Street" layer
-    addStreetLayer();
-
-    // 3. Add click listener for pins
-    map.on('click', function(e) {
-        addPin(e.latlng.lat, e.latlng.lng, "Dropped Pin");
-    });
-
->>>>>>> 525ff796d57d886e7cb15366007c544683793a0a
     console.log("Map initialized.");
 }
 
@@ -171,7 +159,9 @@ function getWeatherForLocation(lat, lng) {
     console.log(`Fetching weather for ${lat}, ${lng}...`);
     
     // TODO: Fetch data from API: https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}`)
+    const API_key = '2341b339626b41ba3b7ef07d98278f81';
+    const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lng}&exclude=${part}&appid=${API_key}`
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             console.dir(data);
