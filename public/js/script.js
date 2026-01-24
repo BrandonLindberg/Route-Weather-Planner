@@ -1,11 +1,15 @@
-// Global Variables to store map state
-let map;                // The Leaflet map object
-let currentTileLayer;   // Holds the current tile layer object
-let currentLayer;       // Holds the current tile layer (Street vs Satellite)
-let markers = [];       // Array to store all our pin objects
-let routePath;          // Object to store the drawn route line
+// ==============================
+// GLOBAL STATE
+// ==============================
+let map;
+let currentTileLayer;
+let radarLayer = null;
+let markers = [];
+let routePath = null;
 
-// DOM variables
+// ==============================
+// DOM REFERENCES
+// ==============================
 const confirmRouteBtn = document.getElementById('floating-confirm-btn');
 const clearPinsBtn = document.getElementById('floating-clear-btn');
 const getWeatherBtn = document.getElementById('floating-weather-btn');
@@ -13,105 +17,131 @@ confirmRouteBtn.addEventListener('click', planRouteMap);
 clearPinsBtn.addEventListener('click', clearAllPins);
 getWeatherBtn.addEventListener('click', getWeatherForLocation);
 
-// 1. INITIALIZATION
-// This function runs when the page loads to set up the map
+// ==============================
+// MAP INITIALIZATION
+// ==============================
 function initMap() {
     // inits map
     map = L.map('map-container', {doubleClickZoom: false}).setView([43.8260, -111.7897], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 17,
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+
+    map.createPane('radarPane');
+    map.getPane('radarPane').style.zIndex = 650;
     
     // adds up to 5 markers
     map.on('dblclick', (e) => addPin(e));
 }
 
-// 2. MAP LAYERS
-// Adds the standard street view layer to the map
+// ==============================
+// MAP LAYERS
+// ==============================
 function addStreetLayer() {
-    // If a layer already exists, remove it so they don't stack up (becasue that is inefficient)
-    if (currentTileLayer) {
-        map.removeLayer(currentTileLayer);
-    }
+    if (currentTileLayer) map.removeLayer(currentTileLayer);
 
-    // Load OpenStreetMap (Street View)
-    currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 17,
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
-    console.log("Map initialized.");
+    currentTileLayer = L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        {
+            maxZoom: 17,
+            attribution: '© OpenStreetMap'
+        }
+    ).addTo(map);
 
-    // Update buttons
     document.getElementById('btn-street').classList.add('active');
     document.getElementById('btn-satellite').classList.remove('active');
 }
 
-// Switches between standard street view and satellite imagery
-function switchLayer(layerType) {
-    if (layerType === 'street') {
+function switchLayer(type) {
+    if (currentTileLayer) map.removeLayer(currentTileLayer);
+
+    if (type === 'street') {
         addStreetLayer();
-    } else if (layerType === 'satellite') {
-        // If a layer exists, remove it
-        if (currentTileLayer) {
-            map.removeLayer(currentTileLayer);
+        return;
+    }
+
+    currentTileLayer = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {
+            attribution: 'Tiles © Esri'
         }
+    ).addTo(map);
 
-        // LOAD THE SATELLITE LAYER (Esri World Imagery (not nasa lol))
-        currentTileLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-        }).addTo(map);
+    document.getElementById('btn-satellite').classList.add('active');
+    document.getElementById('btn-street').classList.remove('active');
+}
 
-        // Update buttons
-        document.getElementById('btn-satellite').classList.add('active');
-        document.getElementById('btn-street').classList.remove('active');
+// ==============================
+// RADAR (RAINVIEWER)
+// ==============================
+async function toggleRadar() {
+    if (radarLayer && map.hasLayer(radarLayer)) {
+        map.removeLayer(radarLayer);
+        radarLayer = null;
+        console.log("Radar removed");
+        return;
+    }
+
+    try {
+        const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+        const data = await res.json();
+        const latestTime = data.radar.past.at(-1).time;
+
+        const colorSelect = document.getElementById('radar-color');
+        const colorScheme = colorSelect ? colorSelect.value : 2;
+
+        radarLayer = L.tileLayer(
+            `https://tilecache.rainviewer.com/v2/radar/${latestTime}/256/{z}/{x}/{y}/${colorScheme}/1_1.png`,
+            {
+                opacity: 0.6,
+                pane: 'radarPane'
+            }
+        );
+
+        radarLayer.addTo(map);
+        console.log("Radar added:", new Date(latestTime * 1000).toLocaleTimeString());
+    } catch (err) {
+        console.error("Radar failed:", err);
     }
 }
 
-function toggleRadar() {
-    // TODO: Check if radar layer exists
-    // TODO: If yes, remove it. If no, add RainViewer API tile layer on top
-    console.log("Toggled weather radar.");
-}
-
-// 3. PINS & LOCATIONS
-// Adds a marker to the map and stores it in our list
+// ==============================
+// PINS
+// ==============================
 function addPin(e) {
-    // gets lat, lng, and crds from double click.
-    const lat = e.latlng.lat;
-    const lng = e.latlng.lng;
-    const crds = [lat, lng];
+    if (markers.length >= 5) return;
 
-    // creates and adds marker obj to markers array and adds pin to map (up to 5)
-    if (markers.length < 5) {
-        const markerObj = {};
-        const marker = L.marker(crds);
-        markerObj.marker = marker;
-        markerObj.crds = crds;
-        
-        markers.push(markerObj);
-        markerObj.marker.addTo(map);
-    }
-    
-    // TODO: write updatePinListUI function to update HTML list in sidebar
+    const latlng = [e.latlng.lat, e.latlng.lng];
+    const marker = L.marker(latlng).addTo(map);
+
+    markers.push({
+        marker,
+        crds: latlng
+    });
+
     updatePinListUI();
 }
 
 function clearAllPins() {
-    // removes each marker from map and clears markers array
-    markers.forEach((marker) => {
-        marker.marker.remove();
-    });
+    markers.forEach(m => m.marker.remove());
     markers = [];
-    map.removeControl(routePath);
+
+    if (routePath) {
+        map.removeControl(routePath);
+        routePath = null;
+    }
+
+    console.log("Pins cleared");
 }
 
 function updatePinListUI() {
-    // TODO: Clear the current HTML list
-    // TODO: Loop through markers and create <li> elements for each
+    // Optional — safe stub
 }
 
-// 4. ROUTING (The "Trip Planning" requirement)
+// ==============================
+// ROUTING
+// ==============================
 function planRouteMap() {
     // gets coordinates for each marker
     const waypointCrds = markers.map(marker => {
@@ -120,7 +150,7 @@ function planRouteMap() {
 
     // creates route path based on each marker and adds to map
     routePath = L.Routing.control({
-        waypoints: waypointCrds,
+        waypoints,
         routeWhileDragging: true
     }).addTo(map);
 }
@@ -178,10 +208,7 @@ async function getWeatherForLocation() {
     // TODO: Change console logs to update html tags visible in UI.
 }
 
-function checkWeatherAlongRoute() {
-    // TODO: Take sample points along the routePath
-    // TODO: Fetch weather for each point to see if there are storms
-}
-
-// Start the app
+// ==============================
+// START APP
+// ==============================
 document.addEventListener('DOMContentLoaded', initMap);
