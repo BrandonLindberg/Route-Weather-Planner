@@ -16,13 +16,6 @@ getWeatherBtn.addEventListener('click', getWeatherForLocation);
 // 1. INITIALIZATION
 // This function runs when the page loads to set up the map
 function initMap() {
-    // TODO: Initialize Leaflet map targeting the 'map-container' div
-    // TODO: Set default view to a central location (e.g., USA)
-    // TODO: Add the default "Street" tile layer (using OpenStreetMap)
-    
-    // Event Listener: Allow users to click on the map to drop a pin
-    // map.on('click', function(e) { addPin(e.latlng.lat, e.latlng.lng); });
-
     // inits map
     map = L.map('map-container', {doubleClickZoom: false}).setView([43.8260, -111.7897], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -32,8 +25,6 @@ function initMap() {
     
     // adds up to 5 markers
     map.on('dblclick', (e) => addPin(e));
-    
-    console.log("Map initialized.");
 }
 
 // 2. MAP LAYERS
@@ -86,12 +77,12 @@ function toggleRadar() {
 // 3. PINS & LOCATIONS
 // Adds a marker to the map and stores it in our list
 function addPin(e) {
-    // TODO: Create a Leaflet marker at [lat, lng]
-    // TODO: Bind a popup to the marker with the label
-    // TODO: Add marker to the 'markers' array
+    // gets lat, lng, and crds from double click.
     const lat = e.latlng.lat;
     const lng = e.latlng.lng;
     const crds = [lat, lng];
+
+    // creates and adds marker obj to markers array and adds pin to map (up to 5)
     if (markers.length < 5) {
         const markerObj = {};
         const marker = L.marker(crds);
@@ -102,19 +93,17 @@ function addPin(e) {
         markerObj.marker.addTo(map);
     }
     
-    // Update the HTML list in the sidebar
+    // TODO: write updatePinListUI function to update HTML list in sidebar
     updatePinListUI();
 }
 
 function clearAllPins() {
-    // TODO: Loop through 'markers' array and remove each from map
-    // TODO: Clear the array
+    // removes each marker from map and clears markers array
     markers.forEach((marker) => {
         marker.marker.remove();
     });
     markers = [];
     map.removeControl(routePath);
-    console.log("Map cleared.");
 }
 
 function updatePinListUI() {
@@ -124,10 +113,12 @@ function updatePinListUI() {
 
 // 4. ROUTING (The "Trip Planning" requirement)
 function planRouteMap() {
+    // gets coordinates for each marker
     const waypointCrds = markers.map(marker => {
         return L.latLng(marker.crds[0], marker.crds[1]);
     })
 
+    // creates route path based on each marker and adds to map
     routePath = L.Routing.control({
         waypoints: waypointCrds,
         routeWhileDragging: true
@@ -155,19 +146,36 @@ function planRouteUI() {
 
 // 5. WEATHER DATA integration
 // Fetches data from Open-Meteo or NWS
-function getWeatherForLocation(lat, lng) {
-    console.log(`Fetching weather for ${lat}, ${lng}...`);
-    
-    // TODO: Fetch data from API: https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lng}
+async function getWeatherForLocation() {
+    // api key. TODO: Store elsewhere
     const API_key = '2341b339626b41ba3b7ef07d98278f81';
-    const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lng}&exclude=${part}&appid=${API_key}`
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            console.dir(data);
-            return data;
-        });
-    // TODO: On success, update the marker's popup with Temp/Condition
+
+    // gets lats, lngs, and coordinates for each pin
+    const lats = markers.map(marker => {
+        return marker.crds[0];
+    });
+    const lngs = markers.map(marker => {
+        return marker.crds[1];
+    });
+    let crds = [];
+    for (let i = 0; i < lats.length; i++) {
+        crds[i] = [lats[i], lngs[i]];
+    };
+
+    // queries api and gets a list of objects containing weather data for each pin
+    const weather_objs = await Promise.all(crds.map(async (crd) => {
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${crd[0]}&lon=${crd[1]}&appid=${API_key}`);
+        return response.json();
+    }));
+
+    // console logs weather data for each pin
+    weather_objs.forEach(weather_obj => {
+        console.dir(weather_obj);
+        console.log(weather_obj.main.temp);
+        console.log(weather_obj.weather[0].description);
+    });
+    
+    // TODO: Change console logs to update html tags visible in UI.
 }
 
 function checkWeatherAlongRoute() {
