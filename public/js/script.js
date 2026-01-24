@@ -131,8 +131,6 @@ function clearAllPins() {
         map.removeControl(routePath);
         routePath = null;
     }
-
-    console.log("Pins cleared");
 }
 
 function updatePinListUI() {
@@ -147,10 +145,10 @@ function planRouteMap() {
     const waypointCrds = markers.map(marker => {
         return L.latLng(marker.crds[0], marker.crds[1]);
     })
-
+    
     // creates route path based on each marker and adds to map
     routePath = L.Routing.control({
-        waypoints,
+        waypoints: waypointCrds,
         routeWhileDragging: true
     }).addTo(map);
 }
