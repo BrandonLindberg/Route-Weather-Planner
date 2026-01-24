@@ -110,16 +110,23 @@ async function toggleRadar() {
 // PINS
 // ==============================
 function addPin(e) {
-    if (markers.length >= 5) return;
+    // gets lat, lng, and crds from double click.
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+    const crds = [lat, lng];
 
-    const latlng = [e.latlng.lat, e.latlng.lng];
-    const marker = L.marker(latlng).addTo(map);
-
-    markers.push({
-        marker,
-        crds: latlng
-    });
-
+    // creates and adds marker obj to markers array and adds pin to map (up to 5)
+    if (markers.length < 5) {
+        const markerObj = {};
+        const marker = L.marker(crds);
+        markerObj.marker = marker;
+        markerObj.crds = crds;
+        
+        markers.push(markerObj);
+        markerObj.marker.addTo(map);
+    }
+    
+    // TODO: write updatePinListUI function to update HTML list in sidebar
     updatePinListUI();
 }
 
