@@ -3,7 +3,7 @@ Route Weather Planner
 ## Team Members
 James T., Mason C., Dominic S., Brandon L.
 ## Software Description
-Plans a route and displays the weather on the route
+This application is a dynamic navigation and weather intelligence tool designed to enhance travel safety and efficiency. Unlike standard GPS tools, it overlays hyper-local, real-time weather data onto your specific travel path. By integrating advanced routing algorithms with meteorological APIs, the software allows users to visualize upcoming weather hazards—such as heavy precipitation, high winds, or icy conditions—at the exact time they are expected to reach each segment of their journey.
 ## Architecture
 Programming Languages: JavaScript, HTML, CSS
 Frameworks: Web Apps, and NodeJS
