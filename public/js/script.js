@@ -12,35 +12,27 @@ let routePath = null;
 // ==============================
 const confirmRouteBtn = document.getElementById('floating-confirm-btn');
 const clearPinsBtn = document.getElementById('floating-clear-btn');
-
+const getWeatherBtn = document.getElementById('floating-weather-btn');
 confirmRouteBtn.addEventListener('click', planRouteMap);
 clearPinsBtn.addEventListener('click', clearAllPins);
+getWeatherBtn.addEventListener('click', getWeatherForLocation);
 
 // ==============================
 // MAP INITIALIZATION
 // ==============================
 function initMap() {
-    map = L.map('map-container', {
-        doubleClickZoom: false
-    }).setView([43.8260, -111.7897], 13);
+    // inits map
+    map = L.map('map-container', {doubleClickZoom: false}).setView([43.8260, -111.7897], 13);
+    currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-    // Base street layer
-    currentTileLayer = L.tileLayer(
-        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        {
-            maxZoom: 17,
-            attribution: '© OpenStreetMap contributors'
-        }
-    ).addTo(map);
-
-    // Radar pane (keeps radar above map)
     map.createPane('radarPane');
     map.getPane('radarPane').style.zIndex = 650;
-
-    // Pin placement (dbl-click)
-    map.on('dblclick', addPin);
-
-    console.log("Map initialized");
+    
+    // adds up to 5 markers
+    map.on('dblclick', (e) => addPin(e));
 }
 
 // ==============================
@@ -118,16 +110,23 @@ async function toggleRadar() {
 // PINS
 // ==============================
 function addPin(e) {
-    if (markers.length >= 5) return;
+    // gets lat, lng, and crds from double click.
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+    const crds = [lat, lng];
 
-    const latlng = [e.latlng.lat, e.latlng.lng];
-    const marker = L.marker(latlng).addTo(map);
-
-    markers.push({
-        marker,
-        crds: latlng
-    });
-
+    // creates and adds marker obj to markers array and adds pin to map (up to 5)
+    if (markers.length < 5) {
+        const markerObj = {};
+        const marker = L.marker(crds);
+        markerObj.marker = marker;
+        markerObj.crds = crds;
+        
+        markers.push(markerObj);
+        markerObj.marker.addTo(map);
+    }
+    
+    // TODO: write updatePinListUI function to update HTML list in sidebar
     updatePinListUI();
 }
 
@@ -139,8 +138,6 @@ function clearAllPins() {
         map.removeControl(routePath);
         routePath = null;
     }
-
-    console.log("Pins cleared");
 }
 
 function updatePinListUI() {
@@ -151,27 +148,69 @@ function updatePinListUI() {
 // ROUTING
 // ==============================
 function planRouteMap() {
-    if (markers.length < 2) return;
-
-    const waypoints = markers.map(m =>
-        L.latLng(m.crds[0], m.crds[1])
-    );
-
-    if (routePath) map.removeControl(routePath);
-
+    // gets coordinates for each marker
+    const waypointCrds = markers.map(marker => {
+        return L.latLng(marker.crds[0], marker.crds[1]);
+    })
+    
+    // creates route path based on each marker and adds to map
     routePath = L.Routing.control({
-        waypoints,
+        waypoints: waypointCrds,
         routeWhileDragging: true
     }).addTo(map);
 }
 
-// ==============================
-// WEATHER (STUB)
-// ==============================
-function getWeatherForLocation(lat, lng) {
-    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}`)
-        .then(r => r.json())
-        .then(data => console.log(data));
+function planRouteUI() {
+    const start = document.getElementById('start-loc').value;
+    const end = document.getElementById('end-loc').value;
+
+    if (!start || !end) {
+        alert("Please enter both a start and end location.");
+        return;
+    }
+
+    console.log(`Calculating route from ${start} to ${end}...`);
+
+    // TODO: Call a Geocoding API to convert city names to Lat/Lng coordinates
+    // TODO: Call a Routing API (like OSRM) with those coordinates
+    // TODO: Draw the resulting polyline (route) on the map
+    
+    // Advanced: Check weather along the route points
+    checkWeatherAlongRoute();
+}
+
+// 5. WEATHER DATA integration
+// Fetches data from Open-Meteo or NWS
+async function getWeatherForLocation() {
+    // api key. TODO: Store elsewhere
+    const API_key = '2341b339626b41ba3b7ef07d98278f81';
+
+    // gets lats, lngs, and coordinates for each pin
+    const lats = markers.map(marker => {
+        return marker.crds[0];
+    });
+    const lngs = markers.map(marker => {
+        return marker.crds[1];
+    });
+    let crds = [];
+    for (let i = 0; i < lats.length; i++) {
+        crds[i] = [lats[i], lngs[i]];
+    };
+
+    // queries api and gets a list of objects containing weather data for each pin
+    const weather_objs = await Promise.all(crds.map(async (crd) => {
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${crd[0]}&lon=${crd[1]}&appid=${API_key}`);
+        return response.json();
+    }));
+
+    // console logs weather data for each pin
+    weather_objs.forEach(weather_obj => {
+        console.dir(weather_obj);
+        console.log(weather_obj.main.temp);
+        console.log(weather_obj.weather[0].description);
+    });
+    
+    // TODO: Change console logs to update html tags visible in UI.
 }
 
 // ==============================

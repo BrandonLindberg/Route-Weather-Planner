@@ -44,6 +44,12 @@
                 </ul>
                 <button class="secondary-btn" onclick="clearAllPins()">Clear Map</button>
             </div>
+
+            <div class="control-group">
+                <h3>Weather Along Route</h3>
+                <div id="start-weather"></div>
+                <div id="end-weather"></div>
+            </div>
         </aside>
 
         <div class="control-group">
@@ -58,6 +64,7 @@
         <div id="map-container">
             <div id="map"></div>
             <div class="floating-btns">
+                <button id="floating-weather-btn">Get Weather</button>
                 <button id="floating-clear-btn">Clear Pins</button>
                 <button id="floating-confirm-btn">Confirm Route</button>
             </div>
