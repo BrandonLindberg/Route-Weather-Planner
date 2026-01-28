@@ -214,6 +214,50 @@ async function getWeatherForLocation() {
 }
 
 // ==============================
+// AI SAFETY REVIEW
+// ==============================
+async function getTripReview() {
+    // Makes sure we get at least 2 pins (Start and End)
+    if (markers.length < 2) {
+        alert("Please double-click the map to add a Start point and an End point first.");
+        return;
+    }
+
+    // Get coordinates from the markers array
+    const startPin = markers[0].crds; // [lat, lng]
+    const endPin = markers[markers.length - 1].crds; // [lat, lng]
+
+    // Notify user it's loading
+    const aiOutputBox = document.getElementById('ai-response-text');
+    if(aiOutputBox) aiOutputBox.innerText = "Consulting AI...";
+
+    try {
+        const response = await fetch('http://localhost:3000/api/review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                startCoords: startPin.join(', '), 
+                endCoords: endPin.join(', ')
+            })
+        });
+
+        const data = await response.json();
+        
+        // Display result
+        console.log("AI Review:", data.review);
+        if(aiOutputBox) {
+            aiOutputBox.innerText = data.review;
+        } else {
+            alert("AI Safety Review:\n" + data.review);
+        }
+
+    } catch (error) {
+        console.error("Error getting review:", error);
+        if(aiOutputBox) aiOutputBox.innerText = "Error contacting server.";
+    }
+}
+
+// ==============================
 // START APP
 // ==============================
 document.addEventListener('DOMContentLoaded', initMap);
