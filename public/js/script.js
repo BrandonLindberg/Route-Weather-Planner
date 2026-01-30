@@ -232,7 +232,7 @@ async function getTripReview() {
     if(aiOutputBox) aiOutputBox.innerText = "Consulting AI...";
 
     try {
-        const response = await fetch('http://147.182.244.101/api/review', {
+        const response = await fetch('http://localhost:3000/api/review', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
