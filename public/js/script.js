@@ -11,9 +11,11 @@ let routePath = null;
 // DOM REFERENCES
 // ==============================
 const confirmRouteBtn = document.getElementById('floating-confirm-btn');
+const confirmRouteUiBtn = document.getElementById('get-route-ui-btn');
 const clearPinsBtn = document.getElementById('floating-clear-btn');
 const getWeatherBtn = document.getElementById('floating-weather-btn');
 confirmRouteBtn.addEventListener('click', planRouteMap);
+confirmRouteUiBtn.addEventListener('click', planRouteUI);
 clearPinsBtn.addEventListener('click', clearAllPins);
 getWeatherBtn.addEventListener('click', getWeatherForLocation);
 
@@ -79,7 +81,7 @@ async function toggleRadar() {
     if (radarLayer && map.hasLayer(radarLayer)) {
         map.removeLayer(radarLayer);
         radarLayer = null;
-        console.log("Radar removed");
+        console.log('Radar removed');
         return;
     }
 
@@ -100,9 +102,9 @@ async function toggleRadar() {
         );
 
         radarLayer.addTo(map);
-        console.log("Radar added:", new Date(latestTime * 1000).toLocaleTimeString());
+        console.log('Radar added:', new Date(latestTime * 1000).toLocaleTimeString());
     } catch (err) {
-        console.error("Radar failed:", err);
+        console.error('Radar failed:', err);
     }
 }
 
@@ -160,12 +162,28 @@ function planRouteMap() {
     }).addTo(map);
 }
 
-function planRouteUI() {
+async function planRouteUI() {
+    const geocodio_key = '9a8aa24a77b839353c6bc6aba47ccb42596825a';
     const start = document.getElementById('start-loc').value;
     const end = document.getElementById('end-loc').value;
+    // const url = `https://api.geocod.io/v1.9/geocode?q=1109+N+Highland+St%2c+Arlington+VA&api_key=YOUR_API_KEY`
+    let url = `https://api.geocod.io/v1.9/geocode?q=${start}&api_key=${geocodio_key}`;
+    let response = await fetch(url);
+    let data = await response.json();
+    const startLat = data.results[0].location.lat;
+    const startLng = data.results[0].location.lng;
+    console.log(startLat, startLng)
+    
+    url = `https://api.geocod.io/v1.9/geocode?q=${end}&api_key=${geocodio_key}`;
+    response = await fetch(url);
+    data = await response.json();
+    const endLat = data.results[0].location.lat;
+    const endLng = data.results[0].location.lng;
+    console.log(endLat, endLng)
+
 
     if (!start || !end) {
-        alert("Please enter both a start and end location.");
+        alert('Please enter both a start and end location.');
         return;
     }
 
@@ -177,6 +195,18 @@ function planRouteUI() {
     
     // Advanced: Check weather along the route points
     checkWeatherAlongRoute();
+}
+
+function addMidpointUI() {
+    document.getElementById('end-loc').remove();
+    const endpoint = document.createElement('input');
+    endpoint.type = 'text';
+    endpoint.id = 'end-loc';
+    endpoint.placeholder = 'End Location (e.g. Salt Lake City)';
+
+    const midpoint = document.createElement('input');
+    midpoint.type = 'text';
+    midpoint.className = 'midpoint';
 }
 
 // 5. WEATHER DATA integration

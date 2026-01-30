@@ -13,7 +13,7 @@
 
     <div class="app-container">
         
-        <aside class="sidebar">
+        <div class="sidebar">
             <div class="logo-area">
                 <h1>SkyRoute</h1>
                 <p>Live Weather & Routing</p>
@@ -34,7 +34,8 @@
                     <input type="text" id="start-loc" placeholder="Start Location (e.g. Denver)">
                     <input type="text" id="end-loc" placeholder="End Location (e.g. Salt Lake City)">
                 </div>
-                <button class="action-btn" onclick="planRoute()">Find Route & Weather</button>
+                <button class="action-btn">Add a Midpoint</button>
+                <button id="get-route-ui-btn" class="action-btn">Find Route & Weather</button>
             </div>
 
             <div class="control-group">
@@ -50,7 +51,7 @@
                 <div id="start-weather"></div>
                 <div id="end-weather"></div>
             </div>
-        </aside>
+        </div>
 
         <div id="map-container">
             <div id="map"></div>
