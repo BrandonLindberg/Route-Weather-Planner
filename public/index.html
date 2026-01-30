@@ -6,6 +6,7 @@
     <title>SkyRoute: Weather & Trip Planner</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
     
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -41,7 +42,7 @@
             <div class="control-group">
                 <h3>Marked Locations</h3>
                 <ul id="pin-list" class="pin-list">
-                    <li class="empty-state">No pins added yet. click the map to add one.</li>
+                    <li class="empty-state">No pins added yet. Double-click map to add.</li>
                 </ul>
                 <button class="secondary-btn" onclick="clearAllPins()">Clear Map</button>
             </div>
@@ -51,16 +52,25 @@
                 <div id="start-weather"></div>
                 <div id="end-weather"></div>
             </div>
-        </div>
+
+            <div class="control-group">
+                <h3>AI Assistant</h3>
+                <button class="action-btn" style="background-color: #6c5ce7;" onclick="getTripReview()">
+                    Get Safety Review
+                </button>
+                <div id="ai-response-text" style="margin-top:10px; font-size: 0.9rem; color: #444; background: #fff; padding: 10px; border-radius: 4px; min-height: 20px;">
+                    </div>
+            </div>
+
+        </aside>
 
         <div id="map-container">
-            <div id="map"></div>
-            <div class="floating-btns">
+            <div id="map"></div> <div class="floating-btns">
                 <button id="floating-weather-btn">Get Weather</button>
                 <button id="floating-clear-btn">Clear Pins</button>
                 <button id="floating-confirm-btn">Confirm Route</button>
             </div>
-            </div>
+        </div>
         
     </div>
 
