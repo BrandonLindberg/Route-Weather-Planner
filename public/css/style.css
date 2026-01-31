@@ -123,6 +123,15 @@ button {
     margin-top: 10px;
 }
 
+.action-btns-2-row {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btns-2-row button {
+    flex: 1;
+}
+ 
 /* Pin List */
 .pin-list {
     list-style: none;

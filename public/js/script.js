@@ -6,25 +6,42 @@ let currentTileLayer;
 let radarLayer = null;
 let markers = [];
 let routePath = null;
+let pointsUI = [];
 
 // ==============================
 // DOM REFERENCES
 // ==============================
+
+// Buttons
 const confirmRouteBtn = document.getElementById('floating-confirm-btn');
 const confirmRouteUiBtn = document.getElementById('get-route-ui-btn');
 const clearPinsBtn = document.getElementById('floating-clear-btn');
 const getWeatherBtn = document.getElementById('floating-weather-btn');
-confirmRouteBtn.addEventListener('click', planRouteMap);
-confirmRouteUiBtn.addEventListener('click', planRouteUI);
+const addMidpointBtn = document.getElementById('add-midpoint-btn');
+const removeMidpointBtn = document.getElementById('delete-midpoint-btn');
+
+// Event Listeners
+confirmRouteBtn.addEventListener('click', (e) => {planRoute(e)});
+confirmRouteUiBtn.addEventListener('click', (e) => {planRoute(e)});
 clearPinsBtn.addEventListener('click', clearAllPins);
-getWeatherBtn.addEventListener('click', getWeatherForLocation);
+getWeatherBtn.addEventListener('click', () => {getWeatherForLocation()});
+addMidpointBtn.addEventListener('click', addMidpointUI);
+removeMidpointBtn.addEventListener('click', removeMidpointUI);
+
+// Weather Along Route Section
+const weather1 = document.getElementById('weather1');
+const weather2 = document.getElementById('weather2');
+const weather3 = document.getElementById('weather3');
+const weather4 = document.getElementById('weather4');
+const weather5 = document.getElementById('weather5');
+const weatherPoints = [weather1, weather2, weather3, weather4, weather5];
 
 // ==============================
 // MAP INITIALIZATION
 // ==============================
 function initMap() {
     // inits map
-    map = L.map('map-container', {doubleClickZoom: false}).setView([43.8260, -111.7897], 13);
+    map = L.map('map', {doubleClickZoom: false}).setView([43.8260, -111.7897], 13);
     currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 17,
         attribution: '© OpenStreetMap contributors'
@@ -127,14 +144,14 @@ function addPin(e) {
         markers.push(markerObj);
         markerObj.marker.addTo(map);
     }
-    
-    // TODO: write updatePinListUI function to update HTML list in sidebar
-    updatePinListUI();
 }
 
 function clearAllPins() {
     markers.forEach(m => m.marker.remove());
     markers = [];
+    pointsUI.forEach(p => p.remove());
+    pointsUI = [];
+    weatherPoints.forEach(w => w.innerText = '');
 
     if (routePath) {
         map.removeControl(routePath);
@@ -142,62 +159,36 @@ function clearAllPins() {
     }
 }
 
-function updatePinListUI() {
-    // Optional — safe stub
-}
-
 // ==============================
-// ROUTING
+// UI
 // ==============================
-function planRouteMap() {
-    // gets coordinates for each marker
-    const waypointCrds = markers.map(marker => {
-        return L.latLng(marker.crds[0], marker.crds[1]);
-    })
-    
-    // creates route path based on each marker and adds to map
-    routePath = L.Routing.control({
-        waypoints: waypointCrds,
-        routeWhileDragging: true
-    }).addTo(map);
-}
-
-async function planRouteUI() {
+async function getCrdsUI() {
     const geocodio_key = '9a8aa24a77b839353c6bc6aba47ccb42596825a';
+    
     const start = document.getElementById('start-loc').value;
+    const midpoints = pointsUI.map(point => point.value);
     const end = document.getElementById('end-loc').value;
-    // const url = `https://api.geocod.io/v1.9/geocode?q=1109+N+Highland+St%2c+Arlington+VA&api_key=YOUR_API_KEY`
-    let url = `https://api.geocod.io/v1.9/geocode?q=${start}&api_key=${geocodio_key}`;
-    let response = await fetch(url);
-    let data = await response.json();
-    const startLat = data.results[0].location.lat;
-    const startLng = data.results[0].location.lng;
-    console.log(startLat, startLng)
+    const locations = [start, ...midpoints, end];
     
-    url = `https://api.geocod.io/v1.9/geocode?q=${end}&api_key=${geocodio_key}`;
-    response = await fetch(url);
-    data = await response.json();
-    const endLat = data.results[0].location.lat;
-    const endLng = data.results[0].location.lng;
-    console.log(endLat, endLng)
+    const crds = await Promise.all(
+        locations.map(async loc => {
+            let url = `https://api.geocod.io/v1.9/geocode?q=${loc}&api_key=${geocodio_key}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return [data.results[0].location.lat, data.results[0].location.lng];
+        })
+    );
 
-
-    if (!start || !end) {
-        alert('Please enter both a start and end location.');
-        return;
-    }
-
-    console.log(`Calculating route from ${start} to ${end}...`);
-
-    // TODO: Call a Geocoding API to convert city names to Lat/Lng coordinates
-    // TODO: Call a Routing API (like OSRM) with those coordinates
-    // TODO: Draw the resulting polyline (route) on the map
-    
-    // Advanced: Check weather along the route points
-    checkWeatherAlongRoute();
+    return crds;
 }
 
 function addMidpointUI() {
+    if (pointsUI.length > 2) {
+        return;
+    }
+
+    const pointsHolder = document.getElementById('points');
+
     document.getElementById('end-loc').remove();
     const endpoint = document.createElement('input');
     endpoint.type = 'text';
@@ -207,25 +198,72 @@ function addMidpointUI() {
     const midpoint = document.createElement('input');
     midpoint.type = 'text';
     midpoint.className = 'midpoint';
+    midpoint.placeholder = 'Midpoint Location';
+
+    pointsHolder.appendChild(midpoint);
+    pointsHolder.appendChild(endpoint);
+    pointsUI.push(midpoint);
 }
 
-// 5. WEATHER DATA integration
-// Fetches data from Open-Meteo or NWS
-async function getWeatherForLocation() {
+function removeMidpointUI() {
+    pointsUI[pointsUI.length-1].remove();
+    pointsUI.pop();
+}
+
+// ==============================
+// ROUTING
+// ==============================
+async function planRoute(e) {
+    // gets coordinates for each marker
+    if (e.target.id === 'floating-confirm-btn') {
+        const waypointCrds = markers.map(marker => {
+            return L.latLng(marker.crds[0], marker.crds[1]);
+        })
+        const crds = waypointCrds.map(waypoint => {
+            return [waypoint.lat, waypoint.lng];
+        });
+        const weather = await getWeatherForLocation(crds);
+        for (let i = 0; i < weather.length; i++) {
+            weatherPoints[i].innerText = weather[i].name + ' | ' + weather[i].weather[0].main + ' | ' + convertK(weather[i].main.temp) + ' F';
+        }
+        // console.log(weather);
+        
+        // creates route path based on each marker and adds to map
+        routePath = L.Routing.control({
+            waypoints: waypointCrds,
+            routeWhileDragging: true
+        }).addTo(map);
+    } else {
+        const crds = await getCrdsUI();
+        const weather = await getWeatherForLocation(crds);
+        console.log(weather);
+
+        routePath = L.Routing.control({
+            waypoints: crds,
+            routeWhileDragging: true
+        }).addTo(map);
+    }
+}
+
+// ==============================
+// WEATHER
+// ==============================
+async function getWeatherForLocation(crds=null) {
     // api key. TODO: Store elsewhere
     const API_key = '2341b339626b41ba3b7ef07d98278f81';
+    
+    if (crds === null) {
+        crds = markers.map(m => m.crds);
 
-    // gets lats, lngs, and coordinates for each pin
-    const lats = markers.map(marker => {
-        return marker.crds[0];
-    });
-    const lngs = markers.map(marker => {
-        return marker.crds[1];
-    });
-    let crds = [];
-    for (let i = 0; i < lats.length; i++) {
-        crds[i] = [lats[i], lngs[i]];
-    };
+        const weather_objs = await Promise.all(crds.map(async (crd) => {
+            const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${crd[0]}&lon=${crd[1]}&appid=${API_key}`);
+            return response.json();
+        }));
+
+        for (let i = 0; i<weather_objs.length; i++) {
+            weatherPoints[i].innerText = weather_objs[i].name + ' | ' + weather_objs[i].weather[0].main + ' | ' + weather_objs[i].main.temp
+        }
+    }
 
     // queries api and gets a list of objects containing weather data for each pin
     const weather_objs = await Promise.all(crds.map(async (crd) => {
@@ -233,14 +271,11 @@ async function getWeatherForLocation() {
         return response.json();
     }));
 
-    // console logs weather data for each pin
-    weather_objs.forEach(weather_obj => {
-        console.dir(weather_obj);
-        console.log(weather_obj.main.temp);
-        console.log(weather_obj.weather[0].description);
-    });
-    
-    // TODO: Change console logs to update html tags visible in UI.
+    return weather_objs;
+}
+
+function convertK(temp_k) {
+    return ((temp_k - 273.15)*(9/5)+32).toFixed(2);
 }
 
 // ==============================
