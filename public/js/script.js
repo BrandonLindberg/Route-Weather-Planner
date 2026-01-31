@@ -169,7 +169,6 @@ async function getCrdsUI() {
     const midpoints = pointsUI.map(point => point.value);
     const end = document.getElementById('end-loc').value;
     const locations = [start, ...midpoints, end];
-    pointsUI = locations;
     
     const crds = await Promise.all(
         locations.map(async loc => {
@@ -237,7 +236,7 @@ async function planRoute(e) {
     } else {
         const crds = await getCrdsUI();
         const weather = await getWeatherForLocation(crds);
-        for (let i = 0; i < pointsUI.length; i++) {
+        for (let i = 0; i < crds.length; i++) {
             weatherPoints[i].innerText = weather[i].name + ' | ' + weather[i].weather[0].main + ' | ' + convertK(weather[i].main.temp) + ' F';
         }
 
