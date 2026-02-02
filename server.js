@@ -13,15 +13,35 @@ app.use(express.json());
 const geoKey = process.env.MAPBOX_DEV_KEY;
 const apiKey = process.env.OPENWEATHER_API_KEY;
 
-// --- AI CONFIGURATION (Added) ---
+// --- AI CONFIGURATION ---
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-// --- ROUTES ---
-// Existing Weather Route (Placeholder)
+// THE WEATHER ROUTE
 app.get("/api/weather", async (req, res) => {
-    res.json({ message: "Weather endpoint placeholder" });
+    const { lat, lng } = req.query; // Get lat/lng from the URL
+
+    // Access the key from .env
+    const apiKey = process.env.OPENWEATHER_API_KEY; 
+
+    if (!apiKey) {
+        return res.status(500).json({ error: "Server missing API Key" });
+    }
+
+    try {
+        // We add '&units=imperial' for Fahrenheit (use 'metric' for Celsius)
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${apiKey}&units=imperial`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // Pass the weather data back to the frontend
+        res.json(data);
+    } catch (error) {
+        console.error("Weather Fetch Error:", error);
+        res.status(500).json({ error: "Failed to fetch weather" });
+    }
 });
 
 // AI Review Route

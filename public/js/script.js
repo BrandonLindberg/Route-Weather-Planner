@@ -171,7 +171,6 @@ function planRouteUI() {
 
     console.log(`Calculating route from ${start} to ${end}...`);
 
-    // TODO: Call a Geocoding API to convert city names to Lat/Lng coordinates
     // TODO: Call a Routing API (like OSRM) with those coordinates
     // TODO: Draw the resulting polyline (route) on the map
     
@@ -182,42 +181,79 @@ function planRouteUI() {
 // 5. WEATHER DATA integration
 // Fetches data from Open-Meteo or NWS
 async function getWeatherForLocation() {
-    // api key. TODO: Store elsewhere
-    const API_key = '2341b339626b41ba3b7ef07d98278f81';
+    const pinList = document.getElementById('pin-list');
+    
+    // Clear the list to avoid duplicates each time we run this
+    pinList.innerHTML = ""; 
 
-    // gets lats, lngs, and coordinates for each pin
-    const lats = markers.map(marker => {
-        return marker.crds[0];
-    });
-    const lngs = markers.map(marker => {
-        return marker.crds[1];
-    });
-    let crds = [];
-    for (let i = 0; i < lats.length; i++) {
-        crds[i] = [lats[i], lngs[i]];
-    };
+    if (markers.length === 0) {
+        pinList.innerHTML = '<li class="empty-state">No pins added yet.</li>';
+        return;
+    }
 
-    // queries api and gets a list of objects containing weather data for each pin
-    const weather_objs = await Promise.all(crds.map(async (crd) => {
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${crd[0]}&lon=${crd[1]}&appid=${API_key}`);
-        return response.json();
-    }));
+    console.log("Fetching weather for", markers.length, "pins...");
 
-    // console logs weather data for each pin
-    weather_objs.forEach(weather_obj => {
-        console.dir(weather_obj);
-        console.log(weather_obj.main.temp);
-        console.log(weather_obj.weather[0].description);
+    const requests = markers.map(async (markerObj, index) => {
+        const [lat, lng] = markerObj.crds;
+        
+        try {
+            const response = await fetch(`http://localhost:3000/api/weather?lat=${lat}&lng=${lng}`);
+            const data = await response.json();
+            
+            // Return an object with the data AND the marker so we can update the UI
+            return { 
+                data: data, 
+                marker: markerObj.marker, 
+                id: index + 1 
+            };
+        } catch (err) {
+            console.error("Error fetching weather:", err);
+            return null;
+        }
     });
+
+    // Wait for all requests to finish
+    const results = await Promise.all(requests);
+
+    // PROCESS RESULTS & UPDATE UI
+    results.forEach(item => {
+        if (!item || !item.data.main) return; // Skip errors
+
+        const temp = Math.round(item.data.main.temp);
+        const desc = item.data.weather[0].description;
+        const iconCode = item.data.weather[0].icon;
+        
+        // 1. UPDATE THE SIDEBAR LIST
+        const li = document.createElement('li');
+        li.className = 'pin-item';
+        li.innerHTML = `
+            <div>
+                <strong>Pin ${item.id}</strong><br>
+                <span style="text-transform: capitalize;">${desc}</span>
+            </div>
+            <div style="text-align: right;">
+                <span style="font-size: 1.2rem; font-weight: bold;">${temp}°F</span>
+                <img src="https://openweathermap.org/img/wn/${iconCode}.png" alt="icon" style="width: 30px; vertical-align: middle;">
+            </div>
+        `;
+        pinList.appendChild(li);
+
+        // 2. UPDATE THE MAP PIN (Add a popup)
+        item.marker.bindPopup(`
+            <b>Temp:</b> ${temp}°F<br>
+            <b>Condition:</b> ${desc}
+        `).openPopup();
+    });
+}
     
     // TODO: Change console logs to update html tags visible in UI.
-}
+
 
 // ==============================
 // AI SAFETY REVIEW
 // ==============================
 async function getTripReview() {
-    // Makes sure we get at least 2 pins (Start and End)
+    // Makes sure we get at least 2 pins (Start and End) 
     if (markers.length < 2) {
         alert("Please double-click the map to add a Start point and an End point first.");
         return;
