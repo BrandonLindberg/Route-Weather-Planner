@@ -125,8 +125,22 @@ function addPin(e) {
         markers.push(markerObj);
         markerObj.marker.addTo(map);
     }
+    updatePinListUI();
+}
+
+function addManualPin(lat, lng) {
+    if (markers.length >= 5) return;
+
+    const crds = [lat, lng];
+    const marker = L.marker(crds).addTo(map);
+
+    markers.push({
+        marker: marker,
+        crds: crds
+    });
     
-    // TODO: write updatePinListUI function to update HTML list in sidebar
+    // Center the map on the new pin so the user sees it
+    map.setView(crds, 6); 
     updatePinListUI();
 }
 
@@ -160,22 +174,54 @@ function planRouteMap() {
     }).addTo(map);
 }
 
-function planRouteUI() {
-    const start = document.getElementById('start-loc').value;
-    const end = document.getElementById('end-loc').value;
+async function planRoute() {
+    const startInput = document.getElementById('start-loc').value;
+    const endInput = document.getElementById('end-loc').value;
 
-    if (!start || !end) {
+    if (!startInput || !endInput) {
         alert("Please enter both a start and end location.");
         return;
     }
 
-    console.log(`Calculating route from ${start} to ${end}...`);
+    // 1. CLEAR OLD PINS (Optional: keeps the map clean for the new trip)
+    clearAllPins();
 
-    // TODO: Call a Routing API (like OSRM) with those coordinates
-    // TODO: Draw the resulting polyline (route) on the map
-    
-    // Advanced: Check weather along the route points
-    checkWeatherAlongRoute();
+    console.log(`Searching for: ${startInput} and ${endInput}...`);
+
+    try {
+        // 2. GEOCODE BOTH LOCATIONS (Run in parallel for speed)
+        // We use the free OSM Nominatim API
+        const [startData, endData] = await Promise.all([
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(startInput)}`).then(r => r.json()),
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endInput)}`).then(r => r.json())
+        ]);
+
+        // Validation: Did we find the cities?
+        if (startData.length === 0) throw new Error(`Could not find location: ${startInput}`);
+        if (endData.length === 0) throw new Error(`Could not find location: ${endInput}`);
+
+        // 3. EXTRACT COORDINATES (Nominatim returns 'lat' and 'lon' as strings)
+        const startCoords = { lat: parseFloat(startData[0].lat), lng: parseFloat(startData[0].lon) };
+        const endCoords = { lat: parseFloat(endData[0].lat), lng: parseFloat(endData[0].lon) };
+
+        // 4. ADD PINS TO MAP
+        addManualPin(startCoords.lat, startCoords.lng);
+        addManualPin(endCoords.lat, endCoords.lng);
+
+        // 5. TRIGGER EXISTING FUNCTIONS
+        // Draw the line
+        planRouteMap(); 
+        
+        // Fetch the weather for these new pins
+        // We add a small delay to ensure the pins are registered before fetching
+        setTimeout(() => {
+            getWeatherForLocation();
+        }, 500);
+
+    } catch (error) {
+        console.error(error);
+        alert(error.message);
+    }
 }
 
 // 5. WEATHER DATA integration
