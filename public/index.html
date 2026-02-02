@@ -23,8 +23,8 @@
             <div class="control-group">
                 <h3>Map Layers</h3>
                 <div class="button-group">
-                    <button id="btn-street" class="active" onclick="switchLayer('street')">Street</button>
-                    <button id="btn-satellite" onclick="switchLayer('satellite')">Satellite</button>
+                    <button id="btn-street" class="active">Street</button>
+                    <button id="btn-satellite">Satellite</button>
                     <button id="btn-radar" onclick="toggleRadar()">Toggle Rain Radar</button>
                 </div>
             </div>
@@ -47,7 +47,7 @@
                 <ul id="pin-list" class="pin-list">
                     <li class="empty-state">No pins added yet. Double-click map to add.</li>
                 </ul>
-                <button class="secondary-btn" onclick="clearAllPins()">Clear Map</button>
+                <button id="secondary-clear-btn" class="secondary-btn">Clear Map</button>
             </div>
 
             <div class="control-group">
@@ -82,6 +82,6 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <script src="./js/script.js"></script>
+    <script type="module" src="./js/script.js"></script>
 </body>
 </html>

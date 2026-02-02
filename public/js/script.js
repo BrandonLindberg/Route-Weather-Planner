@@ -1,3 +1,7 @@
+import { addPin } from './utils/pins.js';
+import { clearAllPins } from './utils/pins.js';
+import { switchLayer } from './utils/layers.js';
+
 // ==============================
 // GLOBAL STATE
 // ==============================
@@ -19,14 +23,20 @@ const clearPinsBtn = document.getElementById('floating-clear-btn');
 const getWeatherBtn = document.getElementById('floating-weather-btn');
 const addMidpointBtn = document.getElementById('add-midpoint-btn');
 const removeMidpointBtn = document.getElementById('delete-midpoint-btn');
+const clearMapBtn = document.getElementById('secondary-clear-btn');
+const satelliteBtn = document.getElementById('btn-satellite');
+const streetBtn = document.getElementById('btn-street');
 
 // Event Listeners
 confirmRouteBtn.addEventListener('click', (e) => {planRoute(e)});
 confirmRouteUiBtn.addEventListener('click', (e) => {planRoute(e)});
-clearPinsBtn.addEventListener('click', clearAllPins);
+clearPinsBtn.addEventListener('click', (e) => {clearAllPins(markers, pointsUI, weatherPoints, map, routePath)});
 getWeatherBtn.addEventListener('click', () => {getWeatherForLocation()});
 addMidpointBtn.addEventListener('click', addMidpointUI);
 removeMidpointBtn.addEventListener('click', removeMidpointUI);
+clearMapBtn.addEventListener('click', () => {clearAllPins(markers, pointsUI, weatherPoints, map, routePath)});
+satelliteBtn.addEventListener('click', () => {switchLayer('satellite', map, currentTileLayer)});
+streetBtn.addEventListener('click', () => {switchLayer('street', map, currentTileLayer)});
 
 // Weather Along Route Section
 const weather1 = document.getElementById('weather1');
@@ -51,45 +61,45 @@ function initMap() {
     map.getPane('radarPane').style.zIndex = 650;
     
     // adds up to 5 markers
-    map.on('dblclick', (e) => addPin(e));
+    map.on('dblclick', (e) => addPin(e, map, markers));
 }
 
 // ==============================
 // MAP LAYERS
 // ==============================
-function addStreetLayer() {
-    if (currentTileLayer) map.removeLayer(currentTileLayer);
+// function addStreetLayer() {
+//     if (currentTileLayer) map.removeLayer(currentTileLayer);
 
-    currentTileLayer = L.tileLayer(
-        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        {
-            maxZoom: 17,
-            attribution: '© OpenStreetMap'
-        }
-    ).addTo(map);
+//     currentTileLayer = L.tileLayer(
+//         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+//         {
+//             maxZoom: 17,
+//             attribution: '© OpenStreetMap'
+//         }
+//     ).addTo(map);
 
-    document.getElementById('btn-street').classList.add('active');
-    document.getElementById('btn-satellite').classList.remove('active');
-}
+//     document.getElementById('btn-street').classList.add('active');
+//     document.getElementById('btn-satellite').classList.remove('active');
+// }
 
-function switchLayer(type) {
-    if (currentTileLayer) map.removeLayer(currentTileLayer);
+// function switchLayer(type) {
+//     if (currentTileLayer) map.removeLayer(currentTileLayer);
 
-    if (type === 'street') {
-        addStreetLayer();
-        return;
-    }
+//     if (type === 'street') {
+//         addStreetLayer();
+//         return;
+//     }
 
-    currentTileLayer = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        {
-            attribution: 'Tiles © Esri'
-        }
-    ).addTo(map);
+//     currentTileLayer = L.tileLayer(
+//         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+//         {
+//             attribution: 'Tiles © Esri'
+//         }
+//     ).addTo(map);
 
-    document.getElementById('btn-satellite').classList.add('active');
-    document.getElementById('btn-street').classList.remove('active');
-}
+//     document.getElementById('btn-satellite').classList.add('active');
+//     document.getElementById('btn-street').classList.remove('active');
+// }
 
 // ==============================
 // RADAR (RAINVIEWER)
@@ -128,36 +138,36 @@ async function toggleRadar() {
 // ==============================
 // PINS
 // ==============================
-function addPin(e) {
-    // gets lat, lng, and crds from double click.
-    const lat = e.latlng.lat;
-    const lng = e.latlng.lng;
-    const crds = [lat, lng];
+// function addPin(e) {
+//     // gets lat, lng, and crds from double click.
+//     const lat = e.latlng.lat;
+//     const lng = e.latlng.lng;
+//     const crds = [lat, lng];
 
-    // creates and adds marker obj to markers array and adds pin to map (up to 5)
-    if (markers.length < 5) {
-        const markerObj = {};
-        const marker = L.marker(crds);
-        markerObj.marker = marker;
-        markerObj.crds = crds;
+//     // creates and adds marker obj to markers array and adds pin to map (up to 5)
+//     if (markers.length < 5) {
+//         const markerObj = {};
+//         const marker = L.marker(crds);
+//         markerObj.marker = marker;
+//         markerObj.crds = crds;
         
-        markers.push(markerObj);
-        markerObj.marker.addTo(map);
-    }
-}
+//         markers.push(markerObj);
+//         markerObj.marker.addTo(map);
+//     }
+// }
 
-function clearAllPins() {
-    markers.forEach(m => m.marker.remove());
-    markers = [];
-    pointsUI.forEach(p => p.remove());
-    pointsUI = [];
-    weatherPoints.forEach(w => w.innerText = '');
+// function clearAllPins() {
+//     markers.forEach(m => m.marker.remove());
+//     markers = [];
+//     pointsUI.forEach(p => p.remove());
+//     pointsUI = [];
+//     weatherPoints.forEach(w => w.innerText = '');
 
-    if (routePath) {
-        map.removeControl(routePath);
-        routePath = null;
-    }
-}
+//     if (routePath) {
+//         map.removeControl(routePath);
+//         routePath = null;
+//     }
+// }
 
 // ==============================
 // UI
