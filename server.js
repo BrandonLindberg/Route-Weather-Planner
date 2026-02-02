@@ -8,10 +8,16 @@ const app = express();
 // Middleware
 app.use(express.static('public')); // Serves your HTML/CSS/JS files
 app.use(cors());
-app.use(express.json());
+
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline';");
+    next();
+})
 
 const geoKey = process.env.MAPBOX_DEV_KEY;
 const apiKey = process.env.OPENWEATHER_API_KEY;
+
 
 // --- AI CONFIGURATION ---
 // Initialize Gemini
@@ -23,14 +29,11 @@ app.get("/api/weather", async (req, res) => {
     const { lat, lng } = req.query; // Get lat/lng from the URL
 
     // Access the key from .env
-    const apiKey = process.env.OPENWEATHER_API_KEY; 
-
     if (!apiKey) {
         return res.status(500).json({ error: "Server missing API Key" });
     }
 
     try {
-        // We add '&units=imperial' for Fahrenheit (use 'metric' for Celsius)
         const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${apiKey}&units=imperial`;
         
         const response = await fetch(url);
