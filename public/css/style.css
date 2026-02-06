@@ -121,6 +121,17 @@ button {
     margin-top: 10px;
 }
 
+.midpoint-btns {
+    display: flex;
+    justify-content: space-between;
+    gap: 3px;
+    margin-bottom: 5px;
+}
+
+.midpoint-btns button {
+    flex: 1;
+}
+
 /* Pin List */
 .pin-list {
     list-style: none;

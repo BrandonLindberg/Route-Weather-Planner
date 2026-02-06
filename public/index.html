@@ -32,8 +32,12 @@
             <div class="control-group">
                 <h3>Plan Trip</h3>
                 <div class="input-group">
-                    <input type="text" id="start-loc" placeholder="Start Location (e.g. Denver)">
-                    <input type="text" id="end-loc" placeholder="End Location (e.g. Salt Lake City)">
+                    <input type="text" id="start-loc" class="ui-loc" placeholder="Start Location (e.g. Denver)">
+                    <input type="text" id="end-loc" class="ui-loc" placeholder="End Location (e.g. Salt Lake City)">
+                </div>
+                <div class="midpoint-btns">
+                    <button id="remove-midpoint-btn">Remove Midpoint</button>
+                    <button id="midpoint-btn">Add Midpoint</button>
                 </div>
                 <button class="action-btn" onclick="planRoute()">Find Route & Weather</button>
             </div>

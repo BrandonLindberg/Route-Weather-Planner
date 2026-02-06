@@ -13,9 +13,13 @@ let routePath = null;
 const confirmRouteBtn = document.getElementById('floating-confirm-btn');
 const clearPinsBtn = document.getElementById('floating-clear-btn');
 const getWeatherBtn = document.getElementById('floating-weather-btn');
+const addMidpointBtn = document.getElementById('midpoint-btn');
+const removeMidpointBtn = document.getElementById('remove-midpoint-btn');
 confirmRouteBtn.addEventListener('click', planRouteMap);
 clearPinsBtn.addEventListener('click', clearAllPins);
 getWeatherBtn.addEventListener('click', getWeatherForLocation);
+addMidpointBtn.addEventListener('click', addMidpoint);
+removeMidpointBtn.addEventListener('click', removeMidpoint);
 
 // ==============================
 // MAP INITIALIZATION
@@ -158,6 +162,30 @@ function updatePinListUI() {
     // Optional — safe stub
 }
 
+function addMidpoint() {
+    const uiPoints = document.querySelectorAll('.ui-loc');
+    if (uiPoints.length > 6) return;
+
+    const controlGroup = document.querySelector('.input-group');
+
+    const endpoint = document.getElementById('end-loc');
+    endpoint.remove();
+
+    const midpoint = document.createElement('input');
+    midpoint.type = 'text';
+    midpoint.className = 'ui-loc';
+    midpoint.placeholder = 'Middle Location';
+
+    controlGroup.appendChild(midpoint);
+    controlGroup.appendChild(endpoint);
+}
+
+function removeMidpoint() {
+    const uiPoints = document.querySelectorAll('.ui-loc');
+    if (uiPoints.length === 2) return;
+    uiPoints[1].remove();
+}
+
 // ==============================
 // ROUTING
 // ==============================
@@ -175,10 +203,8 @@ function planRouteMap() {
 }
 
 async function planRoute() {
-    const startInput = document.getElementById('start-loc').value;
-    const endInput = document.getElementById('end-loc').value;
-
-    if (!startInput || !endInput) {
+    const locations = Array.from(document.querySelectorAll('.ui-loc'), loc => loc.value);
+    if (locations.length === 0) {
         alert("Please enter both a start and end location.");
         return;
     }
@@ -186,31 +212,29 @@ async function planRoute() {
     // 1. CLEAR OLD PINS (Optional: keeps the map clean for the new trip)
     clearAllPins();
 
-    console.log(`Searching for: ${startInput} and ${endInput}...`);
-
     try {
-        // 2. GEOCODE BOTH LOCATIONS (Run in parallel for speed)
+        // 2. GEOCODE ALL LOCATIONS
         // We use the free OSM Nominatim API
-        const [startData, endData] = await Promise.all([
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(startInput)}`).then(r => r.json()),
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endInput)}`).then(r => r.json())
-        ]);
+        const locData = await Promise.all(locations.map(l => 
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(l)}`).then(r => r.json()))
+        );
 
         // Validation: Did we find the cities?
-        if (startData.length === 0) throw new Error(`Could not find location: ${startInput}`);
-        if (endData.length === 0) throw new Error(`Could not find location: ${endInput}`);
+        // currently no validation
 
         // 3. EXTRACT COORDINATES (Nominatim returns 'lat' and 'lon' as strings)
-        const startCoords = { lat: parseFloat(startData[0].lat), lng: parseFloat(startData[0].lon) };
-        const endCoords = { lat: parseFloat(endData[0].lat), lng: parseFloat(endData[0].lon) };
+        const crds = locData.map(array => {
+            return { lat: parseFloat(array[0].lat), lng: parseFloat(array[0].lon) }
+        });
 
         // 4. ADD PINS TO MAP
-        addManualPin(startCoords.lat, startCoords.lng);
-        addManualPin(endCoords.lat, endCoords.lng);
+        // addManualPin(startCoords.lat, startCoords.lng);
+        // addManualPin(endCoords.lat, endCoords.lng);
+        crds.forEach(crd => addManualPin(crd.lat, crd.lng));
 
         // 5. TRIGGER EXISTING FUNCTIONS
         // Draw the line
-        planRouteMap(); 
+        planRouteMap();
         
         // Fetch the weather for these new pins
         // We add a small delay to ensure the pins are registered before fetching
@@ -236,8 +260,6 @@ async function getWeatherForLocation() {
         pinList.innerHTML = '<li class="empty-state">No pins added yet.</li>';
         return;
     }
-
-    console.log("Fetching weather for", markers.length, "pins...");
 
     const requests = markers.map(async (markerObj, index) => {
         const [lat, lng] = markerObj.crds;
@@ -292,9 +314,6 @@ async function getWeatherForLocation() {
     });
 }
     
-    // TODO: Change console logs to update html tags visible in UI.
-
-
 // ==============================
 // AI SAFETY REVIEW
 // ==============================
