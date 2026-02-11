@@ -360,7 +360,7 @@ async function getTripReview() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                startCoords: startPin.join(', '), 
+                startCoords: startPin.join(', '),
                 endCoords: endPin.join(', ')
             })
         });
