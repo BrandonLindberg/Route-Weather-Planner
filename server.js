@@ -5,8 +5,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 
-// Middleware
-app.use(express.static('public')); // Serves your HTML/CSS/JS files
+app.use(express.static('dist'));
 app.use(cors());
 
 app.use((req, res, next) => {
