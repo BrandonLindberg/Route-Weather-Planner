@@ -132,6 +132,15 @@ button {
     flex: 1;
 }
 
+.ai-btn {
+    width: 100%;
+    background: #55a1ff;
+    color: white;
+    padding: 12px;
+    font-size: 1rem;
+}
+
+
 /* Pin List */
 .pin-list {
     list-style: none;

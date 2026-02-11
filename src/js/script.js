@@ -39,6 +39,8 @@ document.getElementById('btn-radar').addEventListener('click', toggleRadar);
 document.getElementById('plan-route-btn').addEventListener('click', planRoute);
 document.getElementById('clear-pins-btn').addEventListener('click', clearAllPins);
 
+document.getElementById('ai-review-btn').addEventListener('click', getTripReview);
+
 // ==============================
 // MAP INITIALIZATION
 // ==============================
