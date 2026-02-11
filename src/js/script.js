@@ -1,3 +1,20 @@
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+import "leaflet-routing-machine";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+});
+
 // ==============================
 // GLOBAL STATE
 // ==============================
@@ -10,16 +27,17 @@ let routePath = null;
 // ==============================
 // DOM REFERENCES
 // ==============================
-const confirmRouteBtn = document.getElementById('floating-confirm-btn');
-const clearPinsBtn = document.getElementById('floating-clear-btn');
-const getWeatherBtn = document.getElementById('floating-weather-btn');
-const addMidpointBtn = document.getElementById('midpoint-btn');
-const removeMidpointBtn = document.getElementById('remove-midpoint-btn');
-confirmRouteBtn.addEventListener('click', planRouteMap);
-clearPinsBtn.addEventListener('click', clearAllPins);
-getWeatherBtn.addEventListener('click', getWeatherForLocation);
-addMidpointBtn.addEventListener('click', addMidpoint);
-removeMidpointBtn.addEventListener('click', removeMidpoint);
+document.getElementById('floating-confirm-btn').addEventListener('click', planRouteMap);
+document.getElementById('floating-clear-btn').addEventListener('click', clearAllPins);
+document.getElementById('midpoint-btn').addEventListener('click', addMidpoint);
+document.getElementById('remove-midpoint-btn').addEventListener('click', removeMidpoint);
+
+document.getElementById('btn-street').addEventListener('click', () => switchLayer('street'));
+document.getElementById('btn-satellite').addEventListener('click', () => switchLayer('satellite'));
+document.getElementById('btn-radar').addEventListener('click', toggleRadar);
+
+document.getElementById('plan-route-btn').addEventListener('click', planRoute);
+document.getElementById('clear-pins-btn').addEventListener('click', clearAllPins);
 
 // ==============================
 // MAP INITIALIZATION
@@ -200,6 +218,8 @@ function planRouteMap() {
         waypoints: waypointCrds,
         routeWhileDragging: true
     }).addTo(map);
+    
+    getWeatherForLocation();
 }
 
 async function planRoute() {
@@ -248,8 +268,9 @@ async function planRoute() {
     }
 }
 
+// ===============================
 // 5. WEATHER DATA integration
-// Fetches data from Open-Meteo or NWS
+// ===============================
 async function getWeatherForLocation() {
     const pinList = document.getElementById('pin-list');
     

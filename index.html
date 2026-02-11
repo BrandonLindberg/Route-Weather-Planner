@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkyRoute: Weather & Trip Planner</title>
     
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-    
-    <link rel="stylesheet" href="css/style.css">
+    <script type="module" src="/src/js/script.js"></script>
+    <link rel="stylesheet" href="/src/css/style.css">
 </head>
 <body>
 
@@ -23,9 +21,9 @@
             <div class="control-group">
                 <h3>Map Layers</h3>
                 <div class="button-group">
-                    <button id="btn-street" class="active" onclick="switchLayer('street')">Street</button>
-                    <button id="btn-satellite" onclick="switchLayer('satellite')">Satellite</button>
-                    <button id="btn-radar" onclick="toggleRadar()">Toggle Rain Radar</button>
+                    <button id="btn-street" class="active">Street</button>
+                    <button id="btn-satellite">Satellite</button>
+                    <button id="btn-radar">Toggle Rain Radar</button>
                 </div>
             </div>
 
@@ -39,7 +37,7 @@
                     <button id="remove-midpoint-btn">Remove Midpoint</button>
                     <button id="midpoint-btn">Add Midpoint</button>
                 </div>
-                <button class="action-btn" onclick="planRoute()">Find Route & Weather</button>
+                <button id="plan-route-btn" class="action-btn">Find Route & Weather</button>
             </div>
 
             <div class="control-group">
@@ -47,7 +45,7 @@
                 <ul id="pin-list" class="pin-list">
                     <li class="empty-state">No pins added yet. Double-click map to add.</li>
                 </ul>
-                <button class="secondary-btn" onclick="clearAllPins()">Clear Map</button>
+                <button id="clear-pins-btn" class="secondary-btn">Clear Map</button>
             </div>
 
             <div class="control-group">
@@ -69,16 +67,11 @@
 
         <div id="map-container">
             <div id="map"></div> <div class="floating-btns">
-                <button id="floating-weather-btn">Get Weather</button>
                 <button id="floating-clear-btn">Clear Pins</button>
                 <button id="floating-confirm-btn">Confirm Route</button>
             </div>
         </div>
         
     </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-    <script src="./js/script.js"></script>
 </body>
 </html>

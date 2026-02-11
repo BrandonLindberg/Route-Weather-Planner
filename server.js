@@ -34,7 +34,7 @@ app.get("/api/weather", async (req, res) => {
     }
 
     try {
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&appid=${apiKey}&units=imperial`;
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=imperial&appid=${apiKey}`;
         
         const response = await fetch(url);
         const data = await response.json();
