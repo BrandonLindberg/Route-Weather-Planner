@@ -20,24 +20,20 @@ L.Icon.Default.mergeOptions({
 // ==============================
 let map;
 let markers = [];
-
-let routePath = null;
 let routeLayer = null;
-let radarLayer = null;
 let currentTileLayer;
 
-document.getElementById('floating-confirm-btn').addEventListener('click', planRouteMap);
-document.getElementById('floating-clear-btn').addEventListener('click', clearAllPins);
+const locationList = document.getElementById('pin-list');
+
+document.getElementById('floating-confirm-btn').addEventListener('click', planRoutePins);
+document.getElementById('floating-clear-btn').addEventListener('click', clearMapData);
 document.getElementById('midpoint-btn').addEventListener('click', addMidpoint);
 document.getElementById('remove-midpoint-btn').addEventListener('click', removeMidpoint);
-
 document.getElementById('btn-street').addEventListener('click', () => switchLayer('street'));
 document.getElementById('btn-satellite').addEventListener('click', () => switchLayer('satellite'));
 // document.getElementById('btn-radar').addEventListener('click', toggleRadar);
-
-document.getElementById('plan-route-btn').addEventListener('click', fetchRouteWeather);
-document.getElementById('clear-pins-btn').addEventListener('click', clearAllPins);
-
+document.getElementById('plan-route-btn').addEventListener('click', planRouteNames);
+document.getElementById('clear-pins-btn').addEventListener('click', clearMapData);
 document.getElementById('ai-review-btn').addEventListener('click', getTripReview);
 
 // ==============================
@@ -116,7 +112,7 @@ function addPin(e) {
     }
 }
 
-function addManualPin(lat, lng) {
+function addPinFromName(lat, lng) {
     if (markers.length >= 5) return;
 
     const crds = [lat, lng];
@@ -129,16 +125,6 @@ function addManualPin(lat, lng) {
     
     // Center the map on the new pin so the user sees it
     map.setView(crds, 6);
-}
-
-function clearAllPins() {
-    markers.forEach(m => m.marker.remove());
-    markers = [];
-
-    if (routePath) {
-        map.removeControl(routePath);
-        routePath = null;
-    }
 }
 
 function addMidpoint() {
@@ -165,26 +151,26 @@ function removeMidpoint() {
     uiPoints[1].remove();
 }
 
-// ==============================
-// ROUTING
-// ==============================
-function planRouteMap() {
-    // gets coordinates for each marker
-    const waypointCrds = markers.map(marker => {
-        return L.latLng(marker.crds[0], marker.crds[1]);
-    })
-    
-    // creates route path based on each marker and adds to map
-    routePath = L.Routing.control({waypoints: waypointCrds, routeWhileDragging: true}).addTo(map);
+function planRoutePins(){
+    const waypointCoords = markers.map(m => ({
+        type: "coords",
+        lat: m.crds[0],
+        lng: m.crds[1]
+    }));
+    fetchRouteData(waypointCoords);
 }
 
-async function fetchRouteWeather() {
+function planRouteNames(){
+    const locations = Array.from(document.querySelectorAll('.ui-loc'), loc => ({
+        type: "name",
+        value: loc.value
+    }));
+    clearMapData();
+    fetchRouteData(locations);
+}
 
-    clearAllPins();
-    markers = [];
+async function fetchRouteData(locations) {
 
-    const locations = Array.from(document.querySelectorAll('.ui-loc'), loc => loc.value);
-    
     if (locations.length > 0) {
         try {
             const locData = await fetch('http://localhost:3000/api/route', {
@@ -198,7 +184,7 @@ async function fetchRouteWeather() {
             const coords = routeData.coordinates;
             const weather = routeData.weather;
 
-            coords.forEach(c => addManualPin(c.lat, c.lng));
+            coords.forEach(c => addPinFromName(c.lat, c.lng));
 
             renderRoute(route);
             renderWeatherUI(weather);
@@ -213,27 +199,9 @@ async function fetchRouteWeather() {
     }
 }
 
-function renderRoute(route) {
-    console.log(routeLayer);
-    if (routeLayer) {
-        map.removeLayer(routeLayer);
-        routeLayer = null;
-    }
-    routeLayer = L.geoJSON(route.geometry).addTo(map);
-}
-
 function renderWeatherUI(weatherData) {
-    const pinList = document.getElementById('pin-list');
-    
-    // Clear the list to avoid duplicates each time we run this
-    pinList.innerHTML = ""; 
 
-    if (markers.length === 0) {
-        pinList.innerHTML = '<li class="empty-state">No pins added yet.</li>';
-        return;
-    }
-
-    // const requests = markers.map(async (markerObj, index) => {
+    clearWeatherData();
     //     const [lat, lng] = markerObj.crds;
         
     //     try {
@@ -254,13 +222,10 @@ function renderWeatherUI(weatherData) {
 
     // PROCESS RESULTS & UPDATE UI
     weatherData.forEach(item => {
-        // if (!item || !item.data.main) return; // Skip errors
-
         const temp = Math.round(item.main.temp);
         const desc = item.weather[0].description;
         const iconCode = item.weather[0].icon;
         
-        // 1. UPDATE THE SIDEBAR LIST
         const li = document.createElement('li');
         li.className = 'pin-item';
         li.innerHTML = `
@@ -273,8 +238,39 @@ function renderWeatherUI(weatherData) {
                 <img src="https://openweathermap.org/img/wn/${iconCode}.png" alt="icon" style="width: 30px; vertical-align: middle;">
             </div>
         `;
-        pinList.appendChild(li);
+        locationList.appendChild(li);
     });
+}
+
+function renderRoute(route) {
+    if (routeLayer) {
+        map.removeLayer(routeLayer);
+        routeLayer = null;
+    }
+    routeLayer = L.geoJSON(route.geometry).addTo(map);
+}
+
+function clearMapData() {
+    markers.forEach(m => m.marker.remove());
+    markers = [];
+
+    if (routeLayer) {
+        map.removeLayer(routeLayer);
+        routeLayer = null;
+    }
+
+    if (locationList != "") {
+        clearWeatherData();
+    }
+}
+
+function clearWeatherData(){
+    locationList.innerHTML = ""; 
+
+    if (markers.length === 0) {
+        locationList.innerHTML = '<li class="empty-state">No locations added yet.</li>';
+        return;
+    }
 }
     
 // ==============================
