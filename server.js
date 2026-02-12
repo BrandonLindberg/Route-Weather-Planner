@@ -9,20 +9,59 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('dist'));
 
+const apiKey = process.env.OPENWEATHER_API_KEY;
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline';");
     next();
 })
 
-const geoKey = process.env.MAPBOX_DEV_KEY;
-const apiKey = process.env.OPENWEATHER_API_KEY;
+app.post("/api/route", async (req, res) => {
+    const { locations } = req.body;
 
+    try {
+        const locData = await Promise.all(
+            locations.map(async (l) => {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(l)}`
+                );
+                return response.json();
+            })
+        );
 
-// --- AI CONFIGURATION ---
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const coords = locData.map(array => {
+            return { lat: parseFloat(array[0].lat), lng: parseFloat(array[0].lon) };
+        });
+
+        const coordString = coords.map(c => `${c.lng},${c.lat}`).join(';');
+        const routeResponse = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`);
+
+        if (!routeResponse.ok) {
+            const text = await routeResponse.text();
+            console.error('OSRM error:', text);
+            return res.status(routeResponse.status).json({ error: 'Routing failed' });
+        }
+
+        const routeData = await routeResponse.json();
+
+        const weatherData = await Promise.all(coords.map(async (c) => {
+            const weatherResults = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${c.lat}&lon=${c.lng}&units=imperial&exclude=minutely&appid=${apiKey}`);
+            return weatherResults.json();
+        }))
+
+        res.json({
+            route: routeData.routes[0],
+            coordinates: coords,
+            weather: weatherData
+        });
+    } catch (err) {
+        console.error('Server error:', err);
+        res.status(500).json({ error: err.message || 'Server error' });
+    }
+});
 
 // THE WEATHER ROUTE
 app.get("/api/weather", async (req, res) => {
@@ -39,7 +78,6 @@ app.get("/api/weather", async (req, res) => {
         const response = await fetch(url);
         const data = await response.json();
 
-        // Pass the weather data back to the frontend
         res.json(data);
     } catch (error) {
         console.error("Weather Fetch Error:", error);

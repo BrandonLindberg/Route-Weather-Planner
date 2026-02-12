@@ -19,14 +19,13 @@ L.Icon.Default.mergeOptions({
 // GLOBAL STATE
 // ==============================
 let map;
-let currentTileLayer;
-let radarLayer = null;
 let markers = [];
-let routePath = null;
 
-// ==============================
-// DOM REFERENCES
-// ==============================
+let routePath = null;
+let routeLayer = null;
+let radarLayer = null;
+let currentTileLayer;
+
 document.getElementById('floating-confirm-btn').addEventListener('click', planRouteMap);
 document.getElementById('floating-clear-btn').addEventListener('click', clearAllPins);
 document.getElementById('midpoint-btn').addEventListener('click', addMidpoint);
@@ -36,7 +35,7 @@ document.getElementById('btn-street').addEventListener('click', () => switchLaye
 document.getElementById('btn-satellite').addEventListener('click', () => switchLayer('satellite'));
 document.getElementById('btn-radar').addEventListener('click', toggleRadar);
 
-document.getElementById('plan-route-btn').addEventListener('click', planRoute);
+document.getElementById('plan-route-btn').addEventListener('click', fetchRouteWeather);
 document.getElementById('clear-pins-btn').addEventListener('click', clearAllPins);
 
 document.getElementById('ai-review-btn').addEventListener('click', getTripReview);
@@ -99,36 +98,36 @@ function switchLayer(type) {
 // ==============================
 // RADAR (RAINVIEWER)
 // ==============================
-async function toggleRadar() {
-    if (radarLayer && map.hasLayer(radarLayer)) {
-        map.removeLayer(radarLayer);
-        radarLayer = null;
-        console.log("Radar removed");
-        return;
-    }
+// async function toggleRadar() {
+//     if (radarLayer && map.hasLayer(radarLayer)) {
+//         map.removeLayer(radarLayer);
+//         radarLayer = null;
+//         console.log("Radar removed");
+//         return;
+//     }
 
-    try {
-        const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-        const data = await res.json();
-        const latestTime = data.radar.past.at(-1).time;
+//     try {
+//         const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+//         const data = await res.json();
+//         const latestTime = data.radar.past.at(-1).time;
 
-        const colorSelect = document.getElementById('radar-color');
-        const colorScheme = colorSelect ? colorSelect.value : 2;
+//         const colorSelect = document.getElementById('radar-color');
+//         const colorScheme = colorSelect ? colorSelect.value : 2;
 
-        radarLayer = L.tileLayer(
-            `https://tilecache.rainviewer.com/v2/radar/${latestTime}/256/{z}/{x}/{y}/${colorScheme}/1_1.png`,
-            {
-                opacity: 0.6,
-                pane: 'radarPane'
-            }
-        );
+//         radarLayer = L.tileLayer(
+//             `https://tilecache.rainviewer.com/v2/radar/${latestTime}/256/{z}/{x}/{y}/${colorScheme}/1_1.png`,
+//             {
+//                 opacity: 0.6,
+//                 pane: 'radarPane'
+//             }
+//         );
 
-        radarLayer.addTo(map);
-        console.log("Radar added:", new Date(latestTime * 1000).toLocaleTimeString());
-    } catch (err) {
-        console.error("Radar failed:", err);
-    }
-}
+//         radarLayer.addTo(map);
+//         console.log("Radar added:", new Date(latestTime * 1000).toLocaleTimeString());
+//     } catch (err) {
+//         console.error("Radar failed:", err);
+//     }
+// }
 
 // ==============================
 // PINS
@@ -149,7 +148,6 @@ function addPin(e) {
         markers.push(markerObj);
         markerObj.marker.addTo(map);
     }
-    updatePinListUI();
 }
 
 function addManualPin(lat, lng) {
@@ -164,8 +162,7 @@ function addManualPin(lat, lng) {
     });
     
     // Center the map on the new pin so the user sees it
-    map.setView(crds, 6); 
-    updatePinListUI();
+    map.setView(crds, 6);
 }
 
 function clearAllPins() {
@@ -176,10 +173,6 @@ function clearAllPins() {
         map.removeControl(routePath);
         routePath = null;
     }
-}
-
-function updatePinListUI() {
-    // Optional — safe stub
 }
 
 function addMidpoint() {
@@ -216,64 +209,54 @@ function planRouteMap() {
     })
     
     // creates route path based on each marker and adds to map
-    routePath = L.Routing.control({
-        waypoints: waypointCrds,
-        routeWhileDragging: true
-    }).addTo(map);
-    
-    getWeatherForLocation();
+    routePath = L.Routing.control({waypoints: waypointCrds, routeWhileDragging: true}).addTo(map);
 }
 
-async function planRoute() {
+async function fetchRouteWeather() {
+
+    clearAllPins();
+    markers = [];
+
     const locations = Array.from(document.querySelectorAll('.ui-loc'), loc => loc.value);
-    if (locations.length === 0) {
+    
+    if (locations.length > 0) {
+        try {
+            const locData = await fetch('http://localhost:3000/api/route', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ locations })
+            });
+
+            const routeData = await locData.json();
+            const route = routeData.route;
+            const coords = routeData.coordinates;
+            const weather = routeData.weather;
+
+            coords.forEach(c => addManualPin(c.lat, c.lng));
+
+            renderRoute(route);
+            renderWeatherUI(weather);
+        }
+        catch(err) {
+            console.log(err);
+        }
+    }
+    else {
         alert("Please enter both a start and end location.");
         return;
     }
-
-    // 1. CLEAR OLD PINS (Optional: keeps the map clean for the new trip)
-    clearAllPins();
-
-    try {
-        // 2. GEOCODE ALL LOCATIONS
-        // We use the free OSM Nominatim API
-        const locData = await Promise.all(locations.map(l => 
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(l)}`).then(r => r.json()))
-        );
-
-        // Validation: Did we find the cities?
-        // currently no validation
-
-        // 3. EXTRACT COORDINATES (Nominatim returns 'lat' and 'lon' as strings)
-        const crds = locData.map(array => {
-            return { lat: parseFloat(array[0].lat), lng: parseFloat(array[0].lon) }
-        });
-
-        // 4. ADD PINS TO MAP
-        // addManualPin(startCoords.lat, startCoords.lng);
-        // addManualPin(endCoords.lat, endCoords.lng);
-        crds.forEach(crd => addManualPin(crd.lat, crd.lng));
-
-        // 5. TRIGGER EXISTING FUNCTIONS
-        // Draw the line
-        planRouteMap();
-        
-        // Fetch the weather for these new pins
-        // We add a small delay to ensure the pins are registered before fetching
-        setTimeout(() => {
-            getWeatherForLocation();
-        }, 500);
-
-    } catch (error) {
-        console.error(error);
-        alert(error.message);
-    }
 }
 
-// ===============================
-// 5. WEATHER DATA integration
-// ===============================
-async function getWeatherForLocation() {
+function renderRoute(route) {
+    console.log(routeLayer);
+    if (routeLayer) {
+        map.removeLayer(routeLayer);
+        routeLayer = null;
+    }
+    routeLayer = L.geoJSON(route.geometry).addTo(map);
+}
+
+function renderWeatherUI(weatherData) {
     const pinList = document.getElementById('pin-list');
     
     // Clear the list to avoid duplicates each time we run this
@@ -284,42 +267,39 @@ async function getWeatherForLocation() {
         return;
     }
 
-    const requests = markers.map(async (markerObj, index) => {
-        const [lat, lng] = markerObj.crds;
+    // const requests = markers.map(async (markerObj, index) => {
+    //     const [lat, lng] = markerObj.crds;
         
-        try {
-            const response = await fetch(`http://localhost:3000/api/weather?lat=${lat}&lng=${lng}`);
-            const data = await response.json();
+    //     try {
+    //         const response = await fetch(`http://localhost:3000/api/weather?lat=${lat}&lng=${lng}`);
+    //         const data = await response.json();
             
-            // Return an object with the data AND the marker so we can update the UI
-            return { 
-                data: data, 
-                marker: markerObj.marker, 
-                id: index + 1 
-            };
-        } catch (err) {
-            console.error("Error fetching weather:", err);
-            return null;
-        }
-    });
-
-    // Wait for all requests to finish
-    const results = await Promise.all(requests);
+    //         // Return an object with the data AND the marker so we can update the UI
+    //         return { 
+    //             data: data, 
+    //             marker: markerObj.marker, 
+    //             id: index + 1 
+    //         };
+    //     } catch (err) {
+    //         console.error("Error fetching weather:", err);
+    //         return null;
+    //     }
+    // });
 
     // PROCESS RESULTS & UPDATE UI
-    results.forEach(item => {
-        if (!item || !item.data.main) return; // Skip errors
+    weatherData.forEach(item => {
+        // if (!item || !item.data.main) return; // Skip errors
 
-        const temp = Math.round(item.data.main.temp);
-        const desc = item.data.weather[0].description;
-        const iconCode = item.data.weather[0].icon;
+        const temp = Math.round(item.main.temp);
+        const desc = item.weather[0].description;
+        const iconCode = item.weather[0].icon;
         
         // 1. UPDATE THE SIDEBAR LIST
         const li = document.createElement('li');
         li.className = 'pin-item';
         li.innerHTML = `
             <div>
-                <strong>Pin ${item.id}</strong><br>
+                <strong>${item.name}</strong><br>
                 <span style="text-transform: capitalize;">${desc}</span>
             </div>
             <div style="text-align: right;">
@@ -328,12 +308,6 @@ async function getWeatherForLocation() {
             </div>
         `;
         pinList.appendChild(li);
-
-        // 2. UPDATE THE MAP PIN (Add a popup)
-        item.marker.bindPopup(`
-            <b>Temp:</b> ${temp}°F<br>
-            <b>Condition:</b> ${desc}
-        `).openPopup();
     });
 }
     
