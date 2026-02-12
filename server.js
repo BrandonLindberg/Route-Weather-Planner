@@ -63,28 +63,6 @@ app.post("/api/route", async (req, res) => {
     }
 });
 
-// THE WEATHER ROUTE
-app.get("/api/weather", async (req, res) => {
-    const { lat, lng } = req.query; // Get lat/lng from the URL
-
-    // Access the key from .env
-    if (!apiKey) {
-        return res.status(500).json({ error: "Server missing API Key" });
-    }
-
-    try {
-        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lng}&units=imperial&appid=${apiKey}`;
-        
-        const response = await fetch(url);
-        const data = await response.json();
-
-        res.json(data);
-    } catch (error) {
-        console.error("Weather Fetch Error:", error);
-        res.status(500).json({ error: "Failed to fetch weather" });
-    }
-});
-
 // AI Review Route
 app.post('/api/review', async (req, res) => {
     try {

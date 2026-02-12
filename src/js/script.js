@@ -33,7 +33,7 @@ document.getElementById('remove-midpoint-btn').addEventListener('click', removeM
 
 document.getElementById('btn-street').addEventListener('click', () => switchLayer('street'));
 document.getElementById('btn-satellite').addEventListener('click', () => switchLayer('satellite'));
-document.getElementById('btn-radar').addEventListener('click', toggleRadar);
+// document.getElementById('btn-radar').addEventListener('click', toggleRadar);
 
 document.getElementById('plan-route-btn').addEventListener('click', fetchRouteWeather);
 document.getElementById('clear-pins-btn').addEventListener('click', clearAllPins);
@@ -94,40 +94,6 @@ function switchLayer(type) {
     document.getElementById('btn-satellite').classList.add('active');
     document.getElementById('btn-street').classList.remove('active');
 }
-
-// ==============================
-// RADAR (RAINVIEWER)
-// ==============================
-// async function toggleRadar() {
-//     if (radarLayer && map.hasLayer(radarLayer)) {
-//         map.removeLayer(radarLayer);
-//         radarLayer = null;
-//         console.log("Radar removed");
-//         return;
-//     }
-
-//     try {
-//         const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
-//         const data = await res.json();
-//         const latestTime = data.radar.past.at(-1).time;
-
-//         const colorSelect = document.getElementById('radar-color');
-//         const colorScheme = colorSelect ? colorSelect.value : 2;
-
-//         radarLayer = L.tileLayer(
-//             `https://tilecache.rainviewer.com/v2/radar/${latestTime}/256/{z}/{x}/{y}/${colorScheme}/1_1.png`,
-//             {
-//                 opacity: 0.6,
-//                 pane: 'radarPane'
-//             }
-//         );
-
-//         radarLayer.addTo(map);
-//         console.log("Radar added:", new Date(latestTime * 1000).toLocaleTimeString());
-//     } catch (err) {
-//         console.error("Radar failed:", err);
-//     }
-// }
 
 // ==============================
 // PINS
