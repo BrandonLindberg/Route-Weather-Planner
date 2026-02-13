@@ -15,6 +15,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+const API_URL = import.meta.env.VITE_API_URL
+
 // ==============================
 // GLOBAL STATE
 // ==============================
@@ -173,7 +175,7 @@ async function fetchRouteData(locations) {
 
     if (locations.length > 0) {
         try {
-            const locData = await fetch('http://localhost:3000/api/route', {
+            const locData = await fetch(`${API_URL}/api/route`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ locations })
@@ -292,7 +294,7 @@ async function getTripReview() {
     if(aiOutputBox) aiOutputBox.innerText = "Consulting AI...";
 
     try {
-        const response = await fetch('http://localhost:3000/api/review', {
+        const response = await fetch(`${API_URL}/api/review`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
