@@ -8,6 +8,9 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
+import { clearMapData } from "./handlers/renderRouteWeatherHandler";
+import { fetchRouteData } from "./handlers/routeDataHandler";
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -17,30 +20,27 @@ L.Icon.Default.mergeOptions({
 
 const API_URL = import.meta.env.VITE_API_URL
 
-// ==============================
-// GLOBAL STATE
-// ==============================
+// ==============
+// Global States
+// ==============
 let map;
 let markers = [];
-let routeLayer = null;
 let currentTileLayer;
 
-const locationList = document.getElementById('pin-list');
-
 document.getElementById('floating-confirm-btn').addEventListener('click', planRoutePins);
-document.getElementById('floating-clear-btn').addEventListener('click', clearMapData);
+document.getElementById('floating-clear-btn').addEventListener('click', () => clearMapData(markers, map));
 document.getElementById('midpoint-btn').addEventListener('click', addMidpoint);
 document.getElementById('remove-midpoint-btn').addEventListener('click', removeMidpoint);
 document.getElementById('btn-street').addEventListener('click', () => switchLayer('street'));
 document.getElementById('btn-satellite').addEventListener('click', () => switchLayer('satellite'));
 // document.getElementById('btn-radar').addEventListener('click', toggleRadar);
 document.getElementById('plan-route-btn').addEventListener('click', planRouteNames);
-document.getElementById('clear-pins-btn').addEventListener('click', clearMapData);
+document.getElementById('clear-pins-btn').addEventListener('click', () => clearMapData(markers, map));
 document.getElementById('ai-review-btn').addEventListener('click', getTripReview);
 
-// ==============================
-// MAP INITIALIZATION
-// ==============================
+// =========
+// Map Init
+// =========
 function initMap() {
     // inits map
     map = L.map('map-container', {doubleClickZoom: false}).setView([43.8260, -111.7897], 13);
@@ -56,9 +56,9 @@ function initMap() {
     map.on('dblclick', (e) => addPin(e));
 }
 
-// ==============================
-// MAP LAYERS
-// ==============================
+// ===========
+// Map Layers
+// ===========
 function addStreetLayer() {
     if (currentTileLayer) map.removeLayer(currentTileLayer);
 
@@ -93,9 +93,9 @@ function switchLayer(type) {
     document.getElementById('btn-street').classList.remove('active');
 }
 
-// ==============================
-// PINS
-// ==============================
+// =====
+// Pins
+// =====
 function addPin(e) {
     // gets lat, lng, and crds from double click.
     const lat = e.latlng.lat;
@@ -114,7 +114,7 @@ function addPin(e) {
     }
 }
 
-function addPinFromName(lat, lng) {
+export function addPinFromName(lat, lng) {
     if (markers.length >= 5) return;
 
     const crds = [lat, lng];
@@ -153,13 +153,16 @@ function removeMidpoint() {
     uiPoints[1].remove();
 }
 
+// ======================================
+// Call fetching for pins/place names
+// ======================================
 function planRoutePins(){
     const waypointCoords = markers.map(m => ({
         type: "coords",
         lat: m.crds[0],
         lng: m.crds[1]
     }));
-    fetchRouteData(waypointCoords);
+    fetchRouteData(waypointCoords, map);
 }
 
 function planRouteNames(){
@@ -167,117 +170,13 @@ function planRouteNames(){
         type: "name",
         value: loc.value
     }));
-    clearMapData();
-    fetchRouteData(locations);
-}
-
-async function fetchRouteData(locations) {
-
-    if (locations.length > 0) {
-        try {
-            const locData = await fetch(`/api/route`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ locations })
-            });
-
-            const routeData = await locData.json();
-            const route = routeData.route;
-            const coords = routeData.coordinates;
-            const weather = routeData.weather;
-
-            coords.forEach(c => addPinFromName(c.lat, c.lng));
-
-            renderRoute(route);
-            renderWeatherUI(weather);
-        }
-        catch(err) {
-            console.log(err);
-        }
-    }
-    else {
-        alert("Please enter both a start and end location.");
-        return;
-    }
-}
-
-function renderWeatherUI(weatherData) {
-
-    clearWeatherData();
-    //     const [lat, lng] = markerObj.crds;
-        
-    //     try {
-    //         const response = await fetch(`http://localhost:3000/api/weather?lat=${lat}&lng=${lng}`);
-    //         const data = await response.json();
-            
-    //         // Return an object with the data AND the marker so we can update the UI
-    //         return { 
-    //             data: data, 
-    //             marker: markerObj.marker, 
-    //             id: index + 1 
-    //         };
-    //     } catch (err) {
-    //         console.error("Error fetching weather:", err);
-    //         return null;
-    //     }
-    // });
-
-    // PROCESS RESULTS & UPDATE UI
-    weatherData.forEach(item => {
-        const temp = Math.round(item.main.temp);
-        const desc = item.weather[0].description;
-        const iconCode = item.weather[0].icon;
-        
-        const li = document.createElement('li');
-        li.className = 'pin-item';
-        li.innerHTML = `
-            <div>
-                <strong>${item.name}</strong><br>
-                <span style="text-transform: capitalize;">${desc}</span>
-            </div>
-            <div style="text-align: right;">
-                <span style="font-size: 1.2rem; font-weight: bold;">${temp}°F</span>
-                <img src="https://openweathermap.org/img/wn/${iconCode}.png" alt="icon" style="width: 30px; vertical-align: middle;">
-            </div>
-        `;
-        locationList.appendChild(li);
-    });
-}
-
-function renderRoute(route) {
-    if (routeLayer) {
-        map.removeLayer(routeLayer);
-        routeLayer = null;
-    }
-    routeLayer = L.geoJSON(route.geometry).addTo(map);
-}
-
-function clearMapData() {
-    markers.forEach(m => m.marker.remove());
-    markers = [];
-
-    if (routeLayer) {
-        map.removeLayer(routeLayer);
-        routeLayer = null;
-    }
-
-    if (locationList != "") {
-        clearWeatherData();
-    }
-}
-
-function clearWeatherData(){
-    locationList.innerHTML = ""; 
-
-    if (markers.length === 0) {
-        locationList.innerHTML = '<li class="empty-state">No locations added yet.</li>';
-        return;
-    }
+    clearMapData(markers, map);
+    fetchRouteData(locations, map);
 }
     
-// ==============================
-// AI SAFETY REVIEW
-// ==============================
+// ==========
+// AI Review
+// ==========
 async function getTripReview() {
     // Makes sure we get at least 2 pins (Start and End) 
     if (markers.length < 2) {
@@ -319,7 +218,7 @@ async function getTripReview() {
     }
 }
 
-// ==============================
-// START APP
-// ==============================
+// =========
+// App Init
+// =========
 document.addEventListener('DOMContentLoaded', initMap);
