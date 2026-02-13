@@ -1,5 +1,5 @@
 # Project Title
-Route Weather Planner
+SkyRoute
 
 ## Team Members
 James T., Dominic S., Brandon L.
