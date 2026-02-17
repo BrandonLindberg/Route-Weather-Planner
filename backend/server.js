@@ -24,6 +24,10 @@ app.use((req, res, next) => {
 app.use("/api", router);
 
 // AI Review Route
+// TODO: In a real app, we would want to validate these inputs
+// TODO: We could also enhance this by including the weather data for a more informed review
+// TODO: We could also include the distance or estimated travel time for more context
+// TODO: We could change the prompt to provide info about how wind might affect a truck vs a sedan, or how rain might affect a trip through mountainous terrain vs flatlands
 app.post('/api/review', async (req, res) => {
     try {
         // We expect the frontend to send coordinates

@@ -10,6 +10,7 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
 import { clearMapData } from "./handlers/renderRouteWeatherHandler";
 import { fetchRouteData } from "./handlers/routeDataHandler";
+import { toggleRainRadar } from "./handlers/rainRadarHandler";
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -33,7 +34,7 @@ document.getElementById('midpoint-btn').addEventListener('click', addMidpoint);
 document.getElementById('remove-midpoint-btn').addEventListener('click', removeMidpoint);
 document.getElementById('btn-street').addEventListener('click', () => switchLayer('street'));
 document.getElementById('btn-satellite').addEventListener('click', () => switchLayer('satellite'));
-// document.getElementById('btn-radar').addEventListener('click', toggleRadar);
+document.getElementById('btn-radar').addEventListener('click', () => toggleRainRadar(map));
 document.getElementById('plan-route-btn').addEventListener('click', planRouteNames);
 document.getElementById('clear-pins-btn').addEventListener('click', () => clearMapData(markers, map));
 document.getElementById('ai-review-btn').addEventListener('click', getTripReview);
