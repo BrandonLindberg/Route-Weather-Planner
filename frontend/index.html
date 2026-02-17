@@ -56,18 +56,42 @@
 
             <div class="control-group">
                 <h3>AI Assistant</h3>
-                    <button id="ai-review-btn" class="ai-btn">Get Safety Review</button>
-                <div id="ai-response-text" style="margin-top:10px; font-size: 0.9rem; color: #444; background: #fff; padding: 10px; border-radius: 4px; min-height: 20px;">
-                    </div>
+                <button id="ai-review-btn" class="ai-btn">Get Safety Review</button>
+                <div id="ai-response-text" style="margin-top:10px; font-size: 0.9rem; color: #444; background: #fff; padding: 10px; border-radius: 4px; min-height: 20px;"></div>
             </div>
 
         </aside>
 
         <div id="map-container">
-            <div id="map"></div> <div class="floating-btns">
-                <button id="floating-clear-btn">Clear Pins</button>
-                <button id="floating-confirm-btn">Confirm Route</button>
-            </div>
+            <div id="map"></div>
+            <div class="floating-section">
+                <div class="logo-area">
+                    <h1>SkyRoute</h1>
+                    <p>Live Weather & Routing</p>
+                </div>
+                <div class="control-group map-layers">
+                    <h3>Map Layers</h3>
+                    <div class="btn-group">
+                        <button id="street-btn">Street</button>
+                        <button id="satellite-btn">Satellite</button>
+                    </div>
+                    <div class="btn-group"><button id="radar-btn">Toggle Radar</button></div>
+                </div>
+                <div class="control-group map-controls">
+                    <h3>Map Controls</h3>
+                    <div class="btn-group">
+                        <button id="floating-clear-btn">Clear Map</button>
+                        <button id="floating-confirm-btn">Get Route & Weather</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <h3>AI Assistant</h3>
+                    <div class="btn-group">
+                        <button id="ai-btn">Get Safety Review</button>
+                    </div>
+                    <!-- <div id="ai-response-text" style="margin-top:10px; font-size: 0.9rem; color: #444; background: #fff; padding: 10px; border-radius: 4px; min-height: 20px;"></div> -->
+                </div>
+            </div> 
         </div>
         
     </div>
