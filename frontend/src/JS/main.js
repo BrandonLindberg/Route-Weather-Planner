@@ -60,6 +60,7 @@ function initMap() {
 // ===========
 // Map Layers
 // ===========
+// TODO: We could enhance this by adding more layer options like terrain, dark mode, or even custom styles. We could also add a dropdown menu for easier selection if we end up with more than 2-3 layers. For now, we'll keep it simple with just Street and Satellite views, but there's definitely room for expansion here in the future.
 function addStreetLayer() {
     if (currentTileLayer) map.removeLayer(currentTileLayer);
 
@@ -97,6 +98,9 @@ function switchLayer(type) {
 // =====
 // Pins
 // =====
+// TODO: We could get the location of the user on page load and center the map there for a more personalized experience. We could also add a "Locate Me" button that does this on demand. For now, we'll just start with a default view of the US, but adding geolocation would be a nice enhancement for future iterations.
+// TODO: We could store the users pins in local storage so they persist across sessions, or even allow them to save and load different routes. For the MVP, we'll keep it simple and just have the pins exist in memory while the page is open, but there's definitely room for expansion here in the future.
+// TODO: We could add suggestive locations when typing in the input fields using a geocoding API like Mapbox or Google Places. This would make it easier for users to enter their desired locations and reduce the chances of typos or invalid entries. For the MVP, we'll just have users enter freeform text and try to geocode it, but adding suggestions would be a great enhancement for future iterations.
 function addPin(e) {
     // gets lat, lng, and crds from double click.
     const lat = e.latlng.lat;
@@ -157,6 +161,10 @@ function removeMidpoint() {
 // ======================================
 // Call fetching for pins/place names
 // ======================================
+// TODO: We could combine these two functions into one that detects whether the input is a name or coordinates, but for simplicity and clarity, I've kept them separate for now.
+// TODO: We should also add some error handling here for invalid place names or failed API calls, but for the MVP, this will do. We can always enhance it later with user-friendly error messages and input validation.
+// TODO: We could add an option to calculate the gas needed for the trip based on the distance and average fuel efficiency which could be a fun addition for users planning their road trip budget.
+// TODO: We could also add an option to include rest stops or points of interest along the route, which could be a fun feature for users planning a road trip.
 function planRoutePins(){
     const waypointCoords = markers.map(m => ({
         type: "coords",
@@ -223,3 +231,6 @@ async function getTripReview() {
 // App Init
 // =========
 document.addEventListener('DOMContentLoaded', initMap);
+
+
+// TODO: We could think about a mobile version of this app in the future, which would have a different UI/UX and might use native geolocation and mapping features. For the MVP, we'll focus on a web-based version that works well on desktop browsers, but there's definitely potential to expand into mobile down the line.
