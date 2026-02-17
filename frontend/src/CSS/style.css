@@ -19,19 +19,19 @@ body, html {
     width: 100vw;
 }
 
-/* Sidebar Styling */
-.sidebar {
-    width: 350px;
-    background: #ffffff;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    z-index: 1000; /* Sit above the map */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    overflow-y: auto;
+/* Map Container */
+#map-container {
+    flex-grow: 1; /* Take up remaining space */
+    background: #dfe6e9; /* Placeholder color before map loads */
+    position: relative;
 }
 
+#map {
+    height: 100vh;   /* full-screen map */
+    margin: 0;
+}
+
+/* Logo Area */
 .logo-area h1 {
     color: #2c3e50;
     font-size: 1.8rem;
@@ -41,12 +41,28 @@ body, html {
     font-size: 0.9rem;
 }
 
-/* Control Groups */
+/* Body */
+.floating-section {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 1000;
+    width: 25%;
+
+    background-color: white;
+    border: 2px solid #f8f9fa;
+    border-radius: 8px;
+
+    padding: 2px 6px;
+}
+
+/* Control Group */
 .control-group {
     background: #f8f9fa;
     padding: 15px;
     border-radius: 8px;
     border: 1px solid #e9ecef;
+    margin: 5px auto;
 }
 
 .control-group h3 {
@@ -57,7 +73,7 @@ body, html {
     letter-spacing: 1px;
 }
 
-/* Inputs & Buttons */
+/* Inputs */
 .input-group {
     display: flex;
     flex-direction: column;
@@ -77,6 +93,8 @@ input[type="text"] {
     flex-wrap: wrap;
 }
 
+
+/* Buttons */
 button {
     padding: 8px 12px;
     border: none;
@@ -86,107 +104,28 @@ button {
     transition: background 0.2s;
 }
 
-/* Specific Button Styles */
-#btn-street, #btn-satellite {
-    flex: 1;
-    background: #e2e6ea;
-    color: #333;
-}
-
-#btn-street.active, #btn-satellite.active {
-    background: #3498db;
-    color: white;
-}
-
-#btn-radar {
+.btn-group {
     width: 100%;
+    margin: 5px 0;
+    display: flex;
+    gap: 5px;
+}
+
+.btn-group button {
+    flex: 1;
+}
+
+#radar-btn {
     background: #8e44ad;
     color: white;
-    margin-top: 5px;
 }
 
-.action-btn {
-    width: 100%;
+#floating-confirm-btn {
     background: #27ae60;
     color: white;
-    padding: 12px;
-    font-size: 1rem;
 }
 
-.secondary-btn {
-    width: 100%;
-    background: transparent;
-    border: 1px solid #e74c3c;
-    color: #e74c3c;
-    margin-top: 10px;
-}
-
-.midpoint-btns {
-    display: flex;
-    justify-content: space-between;
-    gap: 3px;
-    margin-bottom: 5px;
-}
-
-.midpoint-btns button {
-    flex: 1;
-}
-
-.ai-btn {
-    width: 100%;
+#ai-btn {
     background: #55a1ff;
     color: white;
-    padding: 12px;
-    font-size: 1rem;
-}
-
-
-/* Pin List */
-.pin-list {
-    list-style: none;
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.pin-item {
-    padding: 8px;
-    background: white;
-    border-bottom: 1px solid #eee;
-    font-size: 0.9rem;
-    display: flex;
-    justify-content: space-between;
-}
-
-.empty-state {
-    color: #aaa;
-    font-style: italic;
-    font-size: 0.85rem;
-    text-align: center;
-    padding: 10px 0;
-}
-
-/* Map Container */
-#map-container {
-    flex-grow: 1; /* Take up remaining space */
-    background: #dfe6e9; /* Placeholder color before map loads */
-    position: relative;
-}
-
-#map {
-    height: 100vh;   /* full-screen map */
-    margin: 0;
-}
-
-/* Floating Buttons (floats over map to handle pins and route) */
-.floating-btns {
-    position: absolute;
-    bottom: 10px;    
-    right: 10px;  
-    z-index: 1000;
-    padding: 10px;
-    background: white;
-    /* background: #3B82F6; */
-    border: 2px solid rgba(0,0,0,0.2);
-    border-radius: 4px;
-    cursor: pointer;
 }
