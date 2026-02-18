@@ -187,22 +187,20 @@ function planRouteNames(){
 // AI Review
 // ==========
 async function getTripReview() {
-    // Makes sure we get at least 2 pins (Start and End) 
-    if (markers.length < 2) {
-        alert("Please double-click the map to add a Start point and an End point first.");
+    if (typeof markers === 'undefined' || markers.length < 2) {
+        alert("Please double-click the map to add Start and End points.");
         return;
     }
 
-    // Get coordinates from the markers array
-    const startPin = markers[0].crds; // [lat, lng]
-    const endPin = markers[markers.length - 1].crds; // [lat, lng]
+    const startPin = markers[0].crds; 
+    const endPin = markers[markers.length - 1].crds; 
 
-    // Notify user it's loading
     const aiOutputBox = document.getElementById('ai-response-text');
     if(aiOutputBox) aiOutputBox.innerText = "Consulting AI...";
 
     try {
-        const response = await fetch(`/api/review`, {
+        // Use full URL if not using a proxy
+        const response = await fetch(`http://localhost:3000/api/review`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -211,10 +209,12 @@ async function getTripReview() {
             })
         });
 
+        if (!response.ok) {
+            throw new Error(`Server Error: ${response.status}`);
+        }
+
         const data = await response.json();
         
-        // Display result
-        console.log("AI Review:", data.review);
         if(aiOutputBox) {
             aiOutputBox.innerText = data.review;
         } else {
@@ -223,7 +223,7 @@ async function getTripReview() {
 
     } catch (error) {
         console.error("Error getting review:", error);
-        if(aiOutputBox) aiOutputBox.innerText = "Error contacting server.";
+        if(aiOutputBox) aiOutputBox.innerText = "Error: Could not reach the AI service.";
     }
 }
 

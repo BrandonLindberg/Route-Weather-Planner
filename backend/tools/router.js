@@ -4,6 +4,7 @@ const router = express.Router();
 import normalizeLocations from "../services/normalizeService.js";
 import getRoute from "../services/routeService.js";
 import getWeather from "../services/weatherService.js";
+import { generateSafetyReview } from "../services/aiService.js";
 
 router.post("/route", async (req, res) => {
     const { locations } = req.body;
@@ -21,6 +22,29 @@ router.post("/route", async (req, res) => {
 
     } catch (err) {
 
+    }
+});
+
+// The AI Review Route
+router.post('/review', async (req, res) => {
+    console.log("Review route hit!");
+    try {
+        const { startCoords, endCoords } = req.body;
+
+        // Validation
+        if (!startCoords || !endCoords) {
+            return res.status(400).json({ error: "Missing start or end coordinates" });
+        }
+
+        // Call the service
+        const reviewText = await generateSafetyReview(startCoords, endCoords);
+
+        // Send response
+        res.json({ review: reviewText });
+
+    } catch (error) {
+        // Handle errors
+        res.status(500).json({ error: "Failed to generate review." });
     }
 });
 
