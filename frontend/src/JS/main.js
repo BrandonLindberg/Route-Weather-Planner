@@ -188,24 +188,25 @@ function planRouteNames(){
 // ==========
 async function getTripReview() {
     if (typeof markers === 'undefined' || markers.length < 2) {
-        alert("Please double-click the map to add Start and End points.");
+        alert("Please double-click the map to add at least a Start and End point.");
         return;
     }
 
     const startPin = markers[0].crds; 
     const endPin = markers[markers.length - 1].crds; 
+    const midPins = markers.slice(1, -1).map(m => m.crds.join(', '));
 
     const aiOutputBox = document.getElementById('ai-response-text');
     if(aiOutputBox) aiOutputBox.innerText = "Consulting AI...";
 
     try {
-        // Use full URL if not using a proxy
         const response = await fetch(`http://localhost:3000/api/review`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 startCoords: startPin.join(', '),
-                endCoords: endPin.join(', ')
+                endCoords: endPin.join(', '),
+                midCoords: midPins
             })
         });
 

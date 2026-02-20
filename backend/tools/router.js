@@ -29,7 +29,7 @@ router.post("/route", async (req, res) => {
 router.post('/review', async (req, res) => {
     console.log("Review route hit!");
     try {
-        const { startCoords, endCoords } = req.body;
+        const { startCoords, endCoords, midCoords } = req.body;
 
         // Validation
         if (!startCoords || !endCoords) {
@@ -37,10 +37,11 @@ router.post('/review', async (req, res) => {
         }
 
         // Call the service
-        const reviewText = await generateSafetyReview(startCoords, endCoords);
+        const reviewText = await generateSafetyReview(startCoords, endCoords, midCoords);
 
         // Send response
         res.json({ review: reviewText });
+        console.log("Review generated successfully!");
 
     } catch (error) {
         // Handle errors
