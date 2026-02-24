@@ -20,6 +20,7 @@ export async function fetchRouteData(locations, map) {
 
             renderRoute(route, map);
             renderWeatherUI(weather);
+            document.getElementById('weather-section').style.display = 'block';
         }
         catch(err) {
             console.log(err);
