@@ -42,6 +42,7 @@ export function clearMapData(markers, map) {
         routeLayer = null;
     }
     clearWeatherData();
+    document.getElementById('weather-section').style.display = 'none';
 }
 
 function clearWeatherData(){
