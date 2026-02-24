@@ -31,12 +31,6 @@ document.getElementById('floating-confirm-btn').addEventListener('click', planRo
 document.getElementById('floating-clear-btn').addEventListener('click', () => clearMapData(markers, map));
 document.getElementById('street-btn').addEventListener('click', () => switchLayer('street'));
 document.getElementById('satellite-btn').addEventListener('click', () => switchLayer('satellite'));
-// document.getElementById('radar-btn').addEventListener('click', toggleRadar);
-// document.getElementById('midpoint-btn').addEventListener('click', addMidpoint);
-// document.getElementById('remove-midpoint-btn').addEventListener('click', removeMidpoint);
-// document.getElementById('plan-route-btn').addEventListener('click', planRouteNames);
-// document.getElementById('clear-pins-btn').addEventListener('click', () => clearMapData(markers, map));
-// document.getElementById('ai-review-btn').addEventListener('click', getTripReview);
 
 // =========
 // Map Init
