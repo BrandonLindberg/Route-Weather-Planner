@@ -9,65 +9,21 @@
     <link rel="stylesheet" href="./src/CSS/style.css">
 </head>
 <body>
-
     <div class="app-container">
-        
-        <aside class="sidebar">
-            <div class="logo-area">
-                <h1>SkyRoute</h1>
-                <p>Live Weather & Routing</p>
-            </div>
-
-            <div class="control-group">
-                <h3>Map Layers</h3>
-                <div class="button-group">
-                    <button id="btn-street" class="active">Street</button>
-                    <button id="btn-satellite">Satellite</button>
-                    <button id="btn-radar">Toggle Rain Radar</button>
-                </div>
-            </div>
-
-            <div class="control-group">
-                <h3>Plan Trip</h3>
-                <div class="input-group">
-                    <input type="text" id="start-loc" class="ui-loc" placeholder="Start Location (e.g. Denver)">
-                    <input type="text" id="end-loc" class="ui-loc" placeholder="End Location (e.g. Salt Lake City)">
-                </div>
-                <div class="midpoint-btns">
-                    <button id="remove-midpoint-btn">Remove Midpoint</button>
-                    <button id="midpoint-btn">Add Midpoint</button>
-                </div>
-                <button id="plan-route-btn" class="action-btn">Find Route & Weather</button>
-            </div>
-
-            <div class="control-group">
-                <h3>Marked Locations</h3>
-                <ul id="pin-list" class="pin-list">
-                    <li class="empty-state">No locations added yet.</li>
-                </ul>
-                <button id="clear-pins-btn" class="secondary-btn">Clear Map</button>
-            </div>
-
-            <div class="control-group">
-                <h3>Weather Along Route</h3>
-                <div id="start-weather"></div>
-                <div id="end-weather"></div>
-            </div>
-
-            <div class="control-group">
-                <h3>AI Assistant</h3>
-                <button id="ai-review-btn" class="ai-btn">Get Safety Review</button>
-                <div id="ai-response-text" style="margin-top:10px; font-size: 0.9rem; color: #444; background: #fff; padding: 10px; border-radius: 4px; min-height: 20px;"></div>
-            </div>
-
-        </aside>
-
         <div id="map-container">
             <div id="map"></div>
-            <div class="floating-section">
+            <input type="checkbox" id="hidden-checkbox" hidden>
+            <div class="floating-section" id="ui-section">
                 <div class="logo-area">
                     <h1>SkyRoute</h1>
                     <p>Live Weather & Routing</p>
+                </div>
+                <div class="control-group">
+                    <h3>AI Assistant</h3>
+                    <div class="btn-group">
+                        <button id="ai-btn">Get Safety Review</button>
+                    </div>
+                    <div id="ai-response-text" style="display: none; margin-top:10px; font-size: 0.9rem; color: #444; background: #fff; padding: 10px; border-radius: 4px; min-height: 20px;"></div>
                 </div>
                 <div class="control-group map-layers">
                     <h3>Map Layers</h3>
@@ -84,16 +40,26 @@
                         <button id="floating-confirm-btn">Get Route & Weather</button>
                     </div>
                 </div>
-                <div class="control-group">
-                    <h3>AI Assistant</h3>
-                    <div class="btn-group">
-                        <button id="ai-btn">Get Safety Review</button>
-                    </div>
-                    <!-- <div id="ai-response-text" style="margin-top:10px; font-size: 0.9rem; color: #444; background: #fff; padding: 10px; border-radius: 4px; min-height: 20px;"></div> -->
+                <div id="expand">
+                    <label for="hidden-checkbox" class="expand-label"><span class="arrow">^</span></label>
                 </div>
-            </div> 
+            </div>
+            <input type="checkbox" id="hidden-checkbox-w" hidden>
+            <div class="floating-section" id="weather-section">
+                <div class="logo-area">
+                    <h1>Weather Data</h1>
+                    <p>Weather Along Your Route</p>
+                </div>
+                <div>
+                    <div class="control-group">
+                        <ul id="pin-list"></ul>
+                    </div>
+                </div>
+                <div id="expand-w">
+                    <label for="hidden-checkbox-w" class="expand-label"><span class="arrow-w">^</span></label>
+                </div>
+            </div>
         </div>
-        
     </div>
 </body>
 </html>
