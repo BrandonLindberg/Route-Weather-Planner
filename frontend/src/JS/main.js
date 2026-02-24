@@ -30,14 +30,14 @@ let currentTileLayer;
 
 document.getElementById('floating-confirm-btn').addEventListener('click', planRoutePins);
 document.getElementById('floating-clear-btn').addEventListener('click', () => clearMapData(markers, map));
-document.getElementById('midpoint-btn').addEventListener('click', addMidpoint);
-document.getElementById('remove-midpoint-btn').addEventListener('click', removeMidpoint);
-document.getElementById('btn-street').addEventListener('click', () => switchLayer('street'));
-document.getElementById('btn-satellite').addEventListener('click', () => switchLayer('satellite'));
-document.getElementById('btn-radar').addEventListener('click', () => toggleRainRadar(map));
-document.getElementById('plan-route-btn').addEventListener('click', planRouteNames);
-document.getElementById('clear-pins-btn').addEventListener('click', () => clearMapData(markers, map));
-document.getElementById('ai-review-btn').addEventListener('click', getTripReview);
+document.getElementById('street-btn').addEventListener('click', () => switchLayer('street'));
+document.getElementById('satellite-btn').addEventListener('click', () => switchLayer('satellite'));
+// document.getElementById('radar-btn').addEventListener('click', toggleRadar);
+// document.getElementById('midpoint-btn').addEventListener('click', addMidpoint);
+// document.getElementById('remove-midpoint-btn').addEventListener('click', removeMidpoint);
+// document.getElementById('plan-route-btn').addEventListener('click', planRouteNames);
+// document.getElementById('clear-pins-btn').addEventListener('click', () => clearMapData(markers, map));
+// document.getElementById('ai-review-btn').addEventListener('click', getTripReview);
 
 // =========
 // Map Init
@@ -134,30 +134,6 @@ export function addPinFromName(lat, lng) {
     map.setView(crds, 6);
 }
 
-function addMidpoint() {
-    const uiPoints = document.querySelectorAll('.ui-loc');
-    if (uiPoints.length > 6) return;
-
-    const controlGroup = document.querySelector('.input-group');
-
-    const endpoint = document.getElementById('end-loc');
-    endpoint.remove();
-
-    const midpoint = document.createElement('input');
-    midpoint.type = 'text';
-    midpoint.className = 'ui-loc';
-    midpoint.placeholder = 'Middle Location';
-
-    controlGroup.appendChild(midpoint);
-    controlGroup.appendChild(endpoint);
-}
-
-function removeMidpoint() {
-    const uiPoints = document.querySelectorAll('.ui-loc');
-    if (uiPoints.length === 2) return;
-    uiPoints[1].remove();
-}
-
 // ======================================
 // Call fetching for pins/place names
 // ======================================
@@ -172,15 +148,6 @@ function planRoutePins(){
         lng: m.crds[1]
     }));
     fetchRouteData(waypointCoords, map);
-}
-
-function planRouteNames(){
-    const locations = Array.from(document.querySelectorAll('.ui-loc'), loc => ({
-        type: "name",
-        value: loc.value
-    }));
-    clearMapData(markers, map);
-    fetchRouteData(locations, map);
 }
     
 // ==========
