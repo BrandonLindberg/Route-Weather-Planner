@@ -31,7 +31,32 @@ body, html {
     margin: 0;
 }
 
+/* Control Group */
+.control-group {
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    margin: 5px auto;
+    padding: 5px;
+    max-height: 300px;
+    transition: all 0.3s linear;
+}
+
+.control-group h3 {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #95a5a6;
+    letter-spacing: 1px;
+    overflow: hidden;
+}
+
 /* Logo Area */
+.logo-area {
+    max-height: 300px;
+    transition: all 0.3s linear;
+}
+
 .logo-area h1 {
     color: #2c3e50;
     font-size: 1.8rem;
@@ -41,13 +66,13 @@ body, html {
     font-size: 0.9rem;
 }
 
-/* Body */
-.floating-section {
+/* UI Section */
+#ui-section {
     position: absolute;
-    bottom: 10px;
-    right: 10px;
+    top: 10px;
+    left: 50px;
     z-index: 1000;
-    width: 25%;
+    width: 350px;
 
     background-color: white;
     border: 2px solid #f8f9fa;
@@ -56,21 +81,96 @@ body, html {
     padding: 2px 6px;
 }
 
-/* Control Group */
-.control-group {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #e9ecef;
-    margin: 5px auto;
+/* Minimize/Maximize Code */
+#expand {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: all 0.3s linear;
 }
 
-.control-group h3 {
-    margin-bottom: 10px;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    color: #95a5a6;
-    letter-spacing: 1px;
+.expand-label {
+    display: block;
+    width: 100%;
+    background: #e9ecef; /* match your theme */
+    text-align: center;
+    padding: 10px 0;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s linear;
+}
+
+.arrow {
+    display: inline-block;
+    transition: all .4s ease;
+}
+
+#hidden-checkbox:checked ~ #ui-section .control-group {
+    max-height: 0;
+    margin: 0 auto;
+    padding: 0 5px;
+    overflow: hidden;
+}
+
+#hidden-checkbox:checked ~ #ui-section .logo-area {
+    max-height: 0;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+#hidden-checkbox:checked ~ #ui-section #expand .arrow {
+    transform: rotate(180deg);
+}
+
+/* Weather Section */
+#weather-section {
+    display: none;
+    position: absolute;
+    top: 10px;
+    left: 415px;
+    z-index: 2000;
+    width: 350px;
+
+    background-color: white;
+    border: 2px solid #f8f9fa;
+    border-radius: 8px;
+
+    padding: 2px 6px;
+}
+
+#pin-list {
+    list-style-type: none;
+}
+
+#pin-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+#pin-list li:not(:last-child) {
+    border-bottom: 1px solid #dfe6e9;
+}
+
+#hidden-checkbox-w:checked ~ #weather-section .control-group {
+    max-height: 0;
+    margin: 0;
+    padding: 0 5px;
+    overflow: hidden;
+}
+
+#expand-w .arrow-w {
+    display: inline-block;
+    transition: all .4s ease;
+}
+
+#hidden-checkbox-w:checked ~ #weather-section .logo-area {
+    max-height: 0;
+    overflow: hidden;
+}
+
+#hidden-checkbox-w:checked ~ #weather-section #expand-w .arrow-w {
+    transform: rotate(180deg);
 }
 
 /* Inputs */
