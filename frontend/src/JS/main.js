@@ -66,8 +66,8 @@ function addStreetLayer() {
         }
     ).addTo(map);
 
-    document.getElementById('btn-street').classList.add('active');
-    document.getElementById('btn-satellite').classList.remove('active');
+    document.getElementById('street-btn').classList.add('active');
+    document.getElementById('satellite-btn').classList.remove('active');
 }
 
 function switchLayer(type) {
@@ -85,8 +85,8 @@ function switchLayer(type) {
         }
     ).addTo(map);
 
-    document.getElementById('btn-satellite').classList.add('active');
-    document.getElementById('btn-street').classList.remove('active');
+    document.getElementById('satellite-btn').classList.add('active');
+    document.getElementById('street-btn').classList.remove('active');
 }
 
 // =====
