@@ -19,6 +19,7 @@ export async function fetchRouteData(locations, map) {
             coords.forEach(c => addPinFromName(c.lat, c.lng));
 
             renderRoute(route, map);
+            console.log(route)
             renderWeatherUI(weather);
         }
         catch(err) {
