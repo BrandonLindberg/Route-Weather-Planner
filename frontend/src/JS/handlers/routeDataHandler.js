@@ -5,7 +5,7 @@ export async function fetchRouteData(locations, map) {
 
     if (locations.length > 0) {
         try {
-            const locData = await fetch(`http://localhost:3000/api/route`, {
+            const locData = await fetch(`/api/route`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ locations })
