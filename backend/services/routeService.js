@@ -3,11 +3,12 @@ async function getRoute(coords) {
 
     const routeResponse = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`); //Route generation
 
-    if (!routeResponse.ok) {
-        const text = await routeResponse.text();
-        console.error('OSRM error:', text);
-        return res.status(routeResponse.status).json({ error: 'Routing failed' });
-    }
+        if (!routeResponse.ok) {
+            const text = await routeResponse.text();
+            console.error('OSRM error:', text);
+
+            throw new Error(`Routing failed: ${text}`); 
+        }
 
     const routeData = await routeResponse.json();
 

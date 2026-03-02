@@ -4,17 +4,45 @@ let routeLayer = null;
 export function renderWeatherUI(weatherData) {
     locationList.innerHTML = "";
     
-    weatherData.forEach(item => {
+    console.log("=== WEATHER RENDER CALCULATION ===");
+
+    weatherData.forEach((item, index) => {
         const temp = Math.round(item.main.temp);
         const desc = item.weather[0].description;
         const iconCode = item.weather[0].icon;
         
+        // Log the base data
+        console.log(`\nLocation: ${item.name}`);
+        console.log(`Raw ETA Timestamp: ${item.eta_timestamp}`);
+        
+        // Offset is in hours
+        const offsetHours = item.timezone_offset / 3600;
+        console.log(`Timezone Offset: ${offsetHours} hours from UTC`);
+
+        // Shift the time and format it
+        const shiftedTime = (item.eta_timestamp + item.timezone_offset) * 1000;
+        const localDate = new Date(shiftedTime);
+        
+        const timeString = localDate.toLocaleTimeString([], { 
+            timeZone: 'UTC', // Forces the browser not to apply your local timezone on top of it
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        const tzAbbr = getTimezoneAbbr(item.timezone_offset);
+
+        console.log(`Final Displayed Time: ${timeString}`);
+        
+        const timeLabel = index === 0 ? "Current Time" : `ETA: ${timeString} ${tzAbbr}`;
+        
+        // Build the UI
         const li = document.createElement('li');
         li.className = 'pin-item';
         li.innerHTML = `
             <div>
                 <strong>${item.name}</strong><br>
-                <span style="text-transform: capitalize;">${desc}</span>
+                <span style="text-transform: capitalize;">${desc}</span><br>
+                <span style="font-size: 0.85rem; color: #666; font-weight: 500;">${timeLabel}</span>
             </div>
             <div style="text-align: right;">
                 <span style="font-size: 1.2rem; font-weight: bold;">${temp}°F</span>
@@ -23,6 +51,24 @@ export function renderWeatherUI(weatherData) {
         `;
         locationList.appendChild(li);
     });
+    console.log("==================================");
+}
+
+// Helper to map raw UTC offsets to generic US Timezone abbreviations
+function getTimezoneAbbr(offsetSeconds) {
+    const hours = offsetSeconds / 3600;
+    
+    switch (hours) {
+        case -5: return "ET";  // Eastern Time
+        case -6: return "CT";  // Central Time
+        case -7: return "MT";  // Mountain Time
+        case -8: return "PT";  // Pacific Time
+        case -9: return "AKT"; // Alaska Time
+        case -10: return "HT"; // Hawaii Time
+        default: 
+            // Fallback for European/other international routes
+            return hours > 0 ? `UTC+${hours}` : `UTC${hours}`; 
+    }
 }
 
 export function renderRoute(route, map) {
