@@ -19,17 +19,42 @@ body, html {
     width: 100vw;
 }
 
-/* Sidebar Styling */
-.sidebar {
-    width: 350px;
-    background: #ffffff;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-    z-index: 1000; /* Sit above the map */
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    overflow-y: auto;
+/* Map Container */
+#map-container {
+    flex-grow: 1; /* Take up remaining space */
+    background: #dfe6e9; /* Placeholder color before map loads */
+    position: relative;
+}
+
+#map {
+    height: 100vh;   /* full-screen map */
+    margin: 0;
+}
+
+/* Control Group */
+.control-group {
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    margin: 5px auto;
+    padding: 5px;
+    max-height: 300px;
+    transition: all 0.3s linear;
+}
+
+.control-group h3 {
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #95a5a6;
+    letter-spacing: 1px;
+    overflow: hidden;
+}
+
+/* Logo Area */
+.logo-area {
+    max-height: 300px;
+    transition: all 0.3s linear;
 }
 
 .logo-area h1 {
@@ -41,23 +66,114 @@ body, html {
     font-size: 0.9rem;
 }
 
-/* Control Groups */
-.control-group {
-    background: #f8f9fa;
-    padding: 15px;
+/* UI Section */
+#ui-section {
+    position: absolute;
+    top: 10px;
+    left: 50px;
+    z-index: 1000;
+    width: 350px;
+
+    background-color: white;
+    border: 2px solid #f8f9fa;
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+
+    padding: 2px 6px;
 }
 
-.control-group h3 {
-    margin-bottom: 10px;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    color: #95a5a6;
-    letter-spacing: 1px;
+/* Minimize/Maximize Code */
+#expand {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: all 0.3s linear;
 }
 
-/* Inputs & Buttons */
+.expand-label {
+    display: block;
+    width: 100%;
+    background: #e9ecef; /* match your theme */
+    text-align: center;
+    padding: 10px 0;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s linear;
+}
+
+.arrow {
+    display: inline-block;
+    transition: all .4s ease;
+}
+
+#hidden-checkbox:checked ~ #ui-section .control-group {
+    max-height: 0;
+    margin: 0 auto;
+    padding: 0 5px;
+    overflow: hidden;
+}
+
+#hidden-checkbox:checked ~ #ui-section .logo-area {
+    max-height: 0;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+#hidden-checkbox:checked ~ #ui-section #expand .arrow {
+    transform: rotate(180deg);
+}
+
+/* Weather Section */
+#weather-section {
+    display: none;
+    position: absolute;
+    top: 10px;
+    left: 415px;
+    z-index: 2000;
+    width: 350px;
+
+    background-color: white;
+    border: 2px solid #f8f9fa;
+    border-radius: 8px;
+
+    padding: 2px 6px;
+}
+
+#pin-list {
+    list-style-type: none;
+}
+
+#pin-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+#pin-list li:not(:last-child) {
+    border-bottom: 1px solid #dfe6e9;
+}
+
+#hidden-checkbox-w:checked ~ #weather-section .control-group {
+    max-height: 0;
+    margin: 0;
+    padding: 0 5px;
+    overflow: hidden;
+}
+
+#expand-w .arrow-w {
+    display: inline-block;
+    transition: all .4s ease;
+}
+
+#hidden-checkbox-w:checked ~ #weather-section .logo-area {
+    max-height: 0;
+    overflow: hidden;
+}
+
+#hidden-checkbox-w:checked ~ #weather-section #expand-w .arrow-w {
+    transform: rotate(180deg);
+}
+
+/* Inputs */
 .input-group {
     display: flex;
     flex-direction: column;
@@ -77,6 +193,8 @@ input[type="text"] {
     flex-wrap: wrap;
 }
 
+
+/* Buttons */
 button {
     padding: 8px 12px;
     border: none;
@@ -86,107 +204,37 @@ button {
     transition: background 0.2s;
 }
 
-/* Specific Button Styles */
-#btn-street, #btn-satellite {
-    flex: 1;
-    background: #e2e6ea;
-    color: #333;
-}
-
-#btn-street.active, #btn-satellite.active {
-    background: #3498db;
+.active {
+    background-color: #2f7eea;
     color: white;
 }
 
-#btn-radar {
+.btn-group {
     width: 100%;
+    margin: 5px 0;
+    display: flex;
+    gap: 5px;
+}
+
+.btn-group button {
+    flex: 1;
+}
+
+#radar-btn {
     background: #8e44ad;
     color: white;
-    margin-top: 5px;
 }
 
-.action-btn {
-    width: 100%;
+#floating-confirm-btn {
     background: #27ae60;
     color: white;
-    padding: 12px;
-    font-size: 1rem;
 }
 
-.secondary-btn {
-    width: 100%;
-    background: transparent;
-    border: 1px solid #e74c3c;
-    color: #e74c3c;
-    margin-top: 10px;
-}
-
-.midpoint-btns {
-    display: flex;
-    justify-content: space-between;
-    gap: 3px;
-    margin-bottom: 5px;
-}
-
-.midpoint-btns button {
-    flex: 1;
-}
-
-.ai-btn {
-    width: 100%;
-    background: #55a1ff;
+#ai-btn {
+    background: #2f7eea;
     color: white;
-    padding: 12px;
-    font-size: 1rem;
 }
 
-
-/* Pin List */
-.pin-list {
-    list-style: none;
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.pin-item {
-    padding: 8px;
-    background: white;
-    border-bottom: 1px solid #eee;
-    font-size: 0.9rem;
-    display: flex;
-    justify-content: space-between;
-}
-
-.empty-state {
-    color: #aaa;
-    font-style: italic;
-    font-size: 0.85rem;
-    text-align: center;
-    padding: 10px 0;
-}
-
-/* Map Container */
-#map-container {
-    flex-grow: 1; /* Take up remaining space */
-    background: #dfe6e9; /* Placeholder color before map loads */
-    position: relative;
-}
-
-#map {
-    height: 100vh;   /* full-screen map */
-    margin: 0;
-}
-
-/* Floating Buttons (floats over map to handle pins and route) */
-.floating-btns {
-    position: absolute;
-    bottom: 10px;    
-    right: 10px;  
-    z-index: 1000;
-    padding: 10px;
-    background: white;
-    /* background: #3B82F6; */
-    border: 2px solid rgba(0,0,0,0.2);
-    border-radius: 4px;
-    cursor: pointer;
+#ai-btn:hover {
+    background-color: #3f8ef5;
 }

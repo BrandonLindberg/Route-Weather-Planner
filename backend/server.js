@@ -21,4 +21,4 @@ app.use((req, res, next) => {
 app.use("/api", router);
 
 // Start Server
-app.listen(3000, () => console.log('App is active on port 3000'));
+app.listen(4010, () => console.log('App is active on port 4010'));
