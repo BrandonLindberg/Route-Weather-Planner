@@ -33,6 +33,7 @@ document.getElementById('floating-clear-btn').addEventListener('click', () => cl
 document.getElementById('street-btn').addEventListener('click', () => switchLayer('street'));
 document.getElementById('satellite-btn').addEventListener('click', () => switchLayer('satellite'));
 document.getElementById('radar-btn').addEventListener('click', () => toggleRainRadar(map));
+document.getElementById('ai-btn').addEventListener('click', getTripReview);
 
 // =========
 // Map Init
@@ -159,10 +160,14 @@ async function getTripReview() {
     const midPins = markers.slice(1, -1).map(m => m.crds.join(', '));
 
     const aiOutputBox = document.getElementById('ai-response-text');
-    if(aiOutputBox) aiOutputBox.innerText = "Consulting AI...";
+    
+    if(aiOutputBox) {
+        aiOutputBox.style.display = 'block';
+        aiOutputBox.innerText = "Consulting AI...";
+    }
 
     try {
-        const response = await fetch(`/api/review`, {
+        const response = await fetch(`http://localhost:4010/api/review`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -172,9 +177,7 @@ async function getTripReview() {
             })
         });
 
-        if (!response.ok) {
-            throw new Error(`Server Error: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Server Error: ${response.status}`);
 
         const data = await response.json();
         

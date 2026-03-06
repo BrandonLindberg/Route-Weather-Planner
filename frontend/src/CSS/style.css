@@ -38,7 +38,7 @@ body, html {
     border: 1px solid #e9ecef;
     margin: 5px auto;
     padding: 5px;
-    max-height: 300px;
+    max-height: 800px;
     transition: all 0.3s linear;
 }
 
@@ -237,4 +237,9 @@ button {
 
 #ai-btn:hover {
     background-color: #3f8ef5;
+}
+
+#ai-response-text {
+    max-height: 250px; /* Limits the height of the text box itself */
+    overflow-y: auto;  /* Adds a vertical scrollbar if needed */
 }
