@@ -10,6 +10,13 @@
     "pm2": "^6.0.14"
   },
   "scripts": {
-    "dev:server": "node --watch server.js"
+    "dev:server": "node --watch server.js",
+    "start": "node server.js",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.18",
+    "supertest": "^7.2.2",
+    "vitest": "^4.0.18"
   }
 }

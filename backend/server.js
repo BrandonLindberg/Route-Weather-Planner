@@ -20,5 +20,9 @@ app.use((req, res, next) => {
 
 app.use("/api", router);
 
-// Start Server
-app.listen(4010, () => console.log('App is active on port 4010'));
+// Only start the server if Vitest isn't running it
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(4010, () => console.log('App is active on port 4010'));
+}
+
+export default app;
