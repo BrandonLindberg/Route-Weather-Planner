@@ -5,6 +5,7 @@ import normalizeLocations from "../services/normalizeService.js";
 import getRoute from "../services/routeService.js";
 import getWeather from "../services/weatherService.js";
 import { generateSafetyReview } from "../services/aiService.js";
+import sampleRoutePoints from "../services/sampleRoutePoints.js";
 
 router.post("/route", async (req, res) => {
     const { locations } = req.body;
@@ -38,7 +39,12 @@ router.post("/route", async (req, res) => {
         // ---------------------------------
 
         // Pass both coords and etas array to the weather service
-        const weather = await getWeather(coords, etas);
+        const { coords: sampledCoords, etas: sampledEtas } = sampleRoutePoints(
+            route.geometry.coordinates,
+            etas,
+            5  // number of weather points — tune this as needed
+        );
+        const weather = await getWeather(sampledCoords, sampledEtas);
 
         res.json({
             coordinates: coords,
