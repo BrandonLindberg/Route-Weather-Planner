@@ -14,14 +14,12 @@ const parseCoords = (coordString) => {
 
 const formatWeather = (data) => {
     if (data && data.main && data.weather && data.weather[0]) {
-        // Added the time to the format helper
         const time = new Date(data.eta_timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         return `${data.main.temp}°F, ${data.weather[0].description} (at ${time})`;
     }
     return "Data unavailable";
 };
 
-// ADDED: etasArr parameter to match your UI implementation
 export const generateSafetyReview = async (startCoordsStr, endCoordsStr, midCoordsArr = [], etasArr = []) => {
     
     const cleanedMidCoords = [...new Set(midCoordsArr)].filter(
@@ -45,7 +43,7 @@ export const generateSafetyReview = async (startCoordsStr, endCoordsStr, midCoor
         allPoints.push(endObj);
 
         // FALLBACK: If etasArr isn't provided, we create a dummy timeline (Current Time + 2 hours per stop)
-        // Ideally, you should pass the real ETAs from your routing engine here.
+        // Ideally, we should pass the real ETAs from your routing engine here.
         let finalEtas = etasArr;
         if (finalEtas.length === 0) {
             const now = Math.floor(Date.now() / 1000);
@@ -54,7 +52,7 @@ export const generateSafetyReview = async (startCoordsStr, endCoordsStr, midCoor
 
         let weatherData = [];
         try {
-            // FIXED: Now passing both points and the corresponding ETAs
+            // Passing both points and the corresponding ETAs
             weatherData = await getWeather(allPoints, finalEtas);
         } catch (error) {
             console.error("Weather fetch failed:", error);

@@ -59,12 +59,12 @@ function getTimezoneAbbr(offsetSeconds) {
     const hours = offsetSeconds / 3600;
     
     switch (hours) {
-        case -5: return "ET";  // Eastern Time
-        case -6: return "CT";  // Central Time
-        case -7: return "MT";  // Mountain Time
-        case -8: return "PT";  // Pacific Time
-        case -9: return "AKT"; // Alaska Time
-        case -10: return "HT"; // Hawaii Time
+        case -4: return "ET";  // Eastern Time
+        case -5: return "CT";  // Central Time
+        case -6: return "MT";  // Mountain Time
+        case -7: return "PT";  // Pacific Time
+        case -8: return "AKT"; // Alaska Time
+        case -9: return "HT"; // Hawaii Time
         default: 
             // Fallback for European/other international routes
             return hours > 0 ? `UTC+${hours}` : `UTC${hours}`; 
