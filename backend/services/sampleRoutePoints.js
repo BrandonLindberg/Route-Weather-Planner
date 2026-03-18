@@ -8,7 +8,7 @@
  * @param {number} numSamples - How many points to sample (including start/end)
  * @returns {{ coords: {lat, lng}[], etas: number[] }}
  */
-function sampleRoutePoints(coordinates, etas, numSamples = 5) {
+function sampleRoutePoints(coordinates, etas, numSamples) {
     const total = coordinates.length;
     if (total === 0) return { coords: [], etas: [] };
 
