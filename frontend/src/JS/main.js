@@ -116,7 +116,7 @@ function addPin(e) {
 }
 
 export function addPinFromName(lat, lng) {
-    if (markers.length >= 5) return;
+    if (markers.length >= 10) return;
 
     const crds = [lat, lng];
     const marker = L.marker(crds).addTo(map);

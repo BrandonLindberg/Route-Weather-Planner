@@ -12,11 +12,14 @@ export async function fetchRouteData(locations, map) {
             });
 
             const routeData = await locData.json();
+
             const route = routeData.route;
             const coords = routeData.coordinates;
+            const sampledCoords = routeData.sampledCoordinates ?? [];
             const weather = routeData.weather;
 
             coords.forEach(c => addPinFromName(c.lat, c.lng));
+            sampledCoords.forEach(c => addPinFromName(c.lat, c.lng));
 
             renderRoute(route, map);
             renderWeatherUI(weather);

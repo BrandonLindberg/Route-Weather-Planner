@@ -53,6 +53,7 @@ router.post("/route", async (req, res) => {
 
         res.json({
             coordinates: coords,
+            sampledCoordinates: sampledCoords.slice(1, -1),
             route,
             weather
         });
