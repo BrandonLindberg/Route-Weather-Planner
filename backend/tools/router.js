@@ -10,6 +10,11 @@ import sampleRoutePoints from "../services/sampleRoutePoints.js";
 router.post("/route", async (req, res) => {
     const { locations } = req.body;
 
+    // FIX: Add early validation. If there are no locations, return a 400 Bad Request.
+    if (!locations || !Array.isArray(locations) || locations.length === 0) {
+        return res.status(400).json({ error: "Missing or invalid locations array." });
+    }
+
     try {
         const coords = await normalizeLocations(locations);
         const route = await getRoute(coords);

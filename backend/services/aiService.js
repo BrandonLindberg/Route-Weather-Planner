@@ -82,7 +82,7 @@ export const generateSafetyReview = async (startCoordsStr, endCoordsStr, midCoor
             Crucially, analyze how conditions might change over time (e.g., "Starting in clear sun but arriving during a predicted evening thunderstorm").
             
             Include:
-            1. Safety concerns based on the ETA-specific weather.
+            1. Safety concerns based on the specific weather.
             2. Terrain challenges combined with the forecasted conditions.
             
             Keep it under 100 words.

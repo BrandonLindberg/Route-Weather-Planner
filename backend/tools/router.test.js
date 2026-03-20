@@ -2,20 +2,29 @@ import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 
-// 1. Import your actual router
 import router from './router.js';
 
-// 2. Mock the services so we don't hit real APIs (OSRM, OpenWeather)
+// 1. Mock the services
 vi.mock('../services/normalizeService.js', () => ({
     default: vi.fn().mockResolvedValue([
-        { lat: 43.82, lng: -111.79 }, // Fake Rexburg
-        { lat: 47.67, lng: -116.78 }  // Fake Coeur d'Alene
+        { lat: 43.82, lng: -111.79 },
+        { lat: 47.67, lng: -116.78 }
     ])
 }));
 
 vi.mock('../services/routeService.js', () => ({
     default: vi.fn().mockResolvedValue({ 
-        legs: [{ duration: 29520 }] // ~8.2 hours in seconds
+        legs: [{ duration: 29520 }],
+        // FIX: Added geometry so router.js doesn't crash on route.geometry.coordinates
+        geometry: { coordinates: [[-111.79, 43.82], [-116.78, 47.67]] } 
+    })
+}));
+
+// FIX: Mock sampleRoutePoints so it doesn't try to compute math on fake data
+vi.mock('../services/sampleRoutePoints.js', () => ({
+    default: vi.fn().mockReturnValue({
+        coords: [[-111.79, 43.82], [-116.78, 47.67]],
+        etas: [1710960000, 1710985092]
     })
 }));
 
@@ -26,41 +35,36 @@ vi.mock('../services/weatherService.js', () => ({
     ])
 }));
 
-// 3. Set up a mini Express app just for this test
+// 2. Set up mini Express app
 const app = express();
-app.use(express.json()); // We need this so Express can read req.body!
-app.use('/api', router); // Mount the router
+app.use(express.json());
+app.use('/api', router);
 
-// 4. The actual tests
+// 3. The Tests
 describe('Router Integration Tests', () => {
     
     it('POST /api/route should successfully return coordinates, route, and weather', async () => {
-        // Shoot a fake request at our mini-app
         const response = await request(app)
             .post('/api/route')
             .send({ locations: ['Rexburg, ID', 'Coeur d\'Alene, ID'] });
 
-        // Assertions: Did the router do its job?
+        // FIX: Expect 200 OK for a successful request
         expect(response.status).toBe(200);
         
-        // Did it return the 3 main pieces of data?
         expect(response.body).toHaveProperty('coordinates');
         expect(response.body).toHaveProperty('route');
         expect(response.body).toHaveProperty('weather');
         
-        // Did the weather data pass through correctly?
         expect(response.body.weather[0].name).toBe("Rexburg");
     });
 
-    it('POST /api/route should fail gracefully if missing data (Optional Edge Case)', async () => {
-        // You can easily test how your router handles errors!
-        // In this case, passing no data should trigger your catch block.
+    it('POST /api/route should fail gracefully if missing data', async () => {
         const response = await request(app)
             .post('/api/route')
             .send({}); 
 
-        expect(response.status).toBe(500);
+        // FIX: Expect 400 Bad Request for user errors
+        expect(response.status).toBe(400);
         expect(response.body).toHaveProperty('error');
     });
-
 });
