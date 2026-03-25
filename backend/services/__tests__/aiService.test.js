@@ -18,11 +18,13 @@ vi.mock('@google/generative-ai', () => {
 
     // Return a fake GoogleGenerativeAI class
     return {
-        GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
-            getGenerativeModel: vi.fn().mockReturnValue({
-                generateContent: mockGenerateContent
-            })
-        }))
+        GoogleGenerativeAI: class {
+            getGenerativeModel() {
+                return {
+                    generateContent: mockGenerateContent
+                };
+            }
+        }
     };
 });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import getRoute from '../services/routeService.js';
+import getRoute from '../routeService.js';
 
 // 1. Intercept the global fetch function
 global.fetch = vi.fn();

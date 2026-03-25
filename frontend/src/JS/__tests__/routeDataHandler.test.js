@@ -78,6 +78,31 @@ describe('Route Data Handler Tests', () => {
         expect(weatherSection.style.display).toBe('block');
     });
 
+    it('should add pins for both route coordinates and sampled coordinates', async () => {
+        const mockBackendResponse = {
+            route: { geometry: 'fake-line' },
+            coordinates: [
+                { lat: 43.82, lng: -111.79 },
+                { lat: 47.67, lng: -116.78 }
+            ],
+            sampledCoordinates: [
+                { lat: 45.12, lng: -113.44 },
+                { lat: 46.55, lng: -115.02 }
+            ],
+            weather: [{ name: 'Rexburg' }, { name: 'Midpoint' }]
+        };
+
+        fetch.mockResolvedValueOnce({
+            json: () => Promise.resolve(mockBackendResponse)
+        });
+
+        await fetchRouteData(['Rexburg, ID', 'Coeur d\'Alene, ID'], { dummyMap: true });
+
+        expect(addPinFromName).toHaveBeenCalledTimes(4);
+        expect(addPinFromName).toHaveBeenNthCalledWith(3, 45.12, -113.44);
+        expect(addPinFromName).toHaveBeenNthCalledWith(4, 46.55, -115.02);
+    });
+
     it('should show an alert and abort if the locations array is empty', async () => {
         // Run with an empty array
         await fetchRouteData([], {});
@@ -103,6 +128,19 @@ describe('Route Data Handler Tests', () => {
         expect(consoleLogSpy).toHaveBeenCalledWith(mockError);
         
         // It should NOT have tried to render anything
+        expect(renderRoute).not.toHaveBeenCalled();
+    });
+
+    it('should catch and log errors if payload is malformed', async () => {
+        fetch.mockResolvedValueOnce({
+            json: () => Promise.resolve({
+                weather: []
+            })
+        });
+
+        await fetchRouteData(['Rexburg, ID'], {});
+
+        expect(consoleLogSpy).toHaveBeenCalledTimes(1);
         expect(renderRoute).not.toHaveBeenCalled();
     });
 });

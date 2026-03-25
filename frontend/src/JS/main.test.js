@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // 1. Mock our internal handlers so we don't accidentally run them
 import { clearMapData } from './handlers/renderRouteWeatherHandler.js';
@@ -10,6 +10,12 @@ import { toggleRainRadar } from './handlers/rainRadarHandler.js';
 vi.mock('./handlers/renderRouteWeatherHandler.js', () => ({ clearMapData: vi.fn() }));
 vi.mock('./handlers/routeDataHandler.js', () => ({ fetchRouteData: vi.fn() }));
 vi.mock('./handlers/rainRadarHandler.js', () => ({ toggleRainRadar: vi.fn() }));
+vi.mock('leaflet-routing-machine', () => ({}));
+vi.mock('leaflet-routing-machine/dist/leaflet-routing-machine.css', () => ({}));
+vi.mock('leaflet/dist/leaflet.css', () => ({}));
+vi.mock('leaflet/dist/images/marker-icon-2x.png', () => ({ default: 'marker2x.png' }));
+vi.mock('leaflet/dist/images/marker-icon.png', () => ({ default: 'marker.png' }));
+vi.mock('leaflet/dist/images/marker-shadow.png', () => ({ default: 'shadow.png' }));
 
 // 2. Mock Leaflet thoroughly
 const mockAddTo = vi.fn();
@@ -45,7 +51,10 @@ global.alert = vi.fn();
 describe('Main Entry Point Tests', () => {
     let mainModule;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
+        vi.resetModules();
+        vi.clearAllMocks();
+
         // Setup the COMPLETE DOM before importing main.js
         document.body.innerHTML = `
             <div id="map-container"></div>
@@ -63,10 +72,10 @@ describe('Main Entry Point Tests', () => {
 
         // Now dynamically import the file!
         mainModule = await import('./main.js');
-    });
 
-    beforeEach(() => {
-        vi.clearAllMocks();
+        // Initialize module state so map-dependent functions can run safely.
+        document.dispatchEvent(new Event('DOMContentLoaded'));
+
         const aiBox = document.getElementById('ai-response-text');
         if (aiBox) {
             aiBox.style.display = 'none';
@@ -123,6 +132,51 @@ describe('Main Entry Point Tests', () => {
         const aiBox = document.getElementById('ai-response-text');
         expect(aiBox.style.display).toBe('block');
         expect(aiBox.innerText).toBe("Watch out for snow on I-15!");
+    });
+
+    it('should show an error message when AI endpoint returns a non-OK response', async () => {
+        mainModule.addPinFromName(43.82, -111.79);
+        mainModule.addPinFromName(47.67, -116.78);
+
+        fetch.mockResolvedValueOnce({
+            ok: false,
+            status: 500,
+            json: () => Promise.resolve({})
+        });
+
+        document.getElementById('ai-btn').click();
+        await new Promise(process.nextTick);
+
+        const aiBox = document.getElementById('ai-response-text');
+        expect(aiBox.innerText).toBe('Error: Could not reach the AI service.');
+    });
+
+    it('should fallback to alert when AI output box does not exist', async () => {
+        const aiBox = document.getElementById('ai-response-text');
+        aiBox.remove();
+
+        mainModule.addPinFromName(43.82, -111.79);
+        mainModule.addPinFromName(47.67, -116.78);
+
+        fetch.mockResolvedValueOnce({
+            ok: true,
+            json: () => Promise.resolve({ review: 'Conditions are clear.' })
+        });
+
+        document.getElementById('ai-btn').click();
+        await new Promise(process.nextTick);
+
+        expect(global.alert).toHaveBeenCalledWith('AI Safety Review:\nConditions are clear.');
+    });
+
+    it('should alert when there are not enough pins for AI review', async () => {
+        fetch.mockClear();
+
+        document.getElementById('ai-btn').click();
+        await new Promise(process.nextTick);
+
+        expect(global.alert).toHaveBeenCalledWith('Please double-click the map to add at least a Start and End point.');
+        expect(fetch).not.toHaveBeenCalled();
     });
 
     it('should trigger the correct handler when the Clear button is clicked', () => {

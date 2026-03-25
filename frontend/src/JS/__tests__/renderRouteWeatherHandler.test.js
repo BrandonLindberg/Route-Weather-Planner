@@ -3,7 +3,7 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 
 // 1. Mock Leaflet (L) globally since it's not imported at the top of your file
-const mockAddTo = vi.fn();
+const mockAddTo = vi.fn(() => ({ id: 'route-layer' }));
 const mockRemoveLayer = vi.fn();
 global.L = {
     geoJSON: vi.fn(() => ({

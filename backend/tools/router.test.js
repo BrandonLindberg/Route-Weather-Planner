@@ -3,6 +3,11 @@ import request from 'supertest';
 import express from 'express';
 
 import router from './router.js';
+import normalizeLocations from '../services/normalizeService.js';
+import getRoute from '../services/routeService.js';
+import getWeather from '../services/weatherService.js';
+import sampleRoutePoints from '../services/sampleRoutePoints.js';
+import { generateSafetyReview } from '../services/aiService.js';
 
 // 1. Mock the services
 vi.mock('../services/normalizeService.js', () => ({
@@ -15,15 +20,13 @@ vi.mock('../services/normalizeService.js', () => ({
 vi.mock('../services/routeService.js', () => ({
     default: vi.fn().mockResolvedValue({ 
         legs: [{ duration: 29520 }],
-        // FIX: Added geometry so router.js doesn't crash on route.geometry.coordinates
         geometry: { coordinates: [[-111.79, 43.82], [-116.78, 47.67]] } 
     })
 }));
 
-// FIX: Mock sampleRoutePoints so it doesn't try to compute math on fake data
 vi.mock('../services/sampleRoutePoints.js', () => ({
     default: vi.fn().mockReturnValue({
-        coords: [[-111.79, 43.82], [-116.78, 47.67]],
+        coords: [{ lat: 43.82, lng: -111.79 }, { lat: 47.67, lng: -116.78 }],
         etas: [1710960000, 1710985092]
     })
 }));
@@ -35,6 +38,10 @@ vi.mock('../services/weatherService.js', () => ({
     ])
 }));
 
+vi.mock('../services/aiService.js', () => ({
+    generateSafetyReview: vi.fn().mockResolvedValue('Safe trip overall with light rain near destination.')
+}));
+
 // 2. Set up mini Express app
 const app = express();
 app.use(express.json());
@@ -42,29 +49,88 @@ app.use('/api', router);
 
 // 3. The Tests
 describe('Router Integration Tests', () => {
+
+    it('POST /api/route should reject missing locations with 400', async () => {
+        const response = await request(app)
+            .post('/api/route')
+            .send({});
+
+        expect(response.status).toBe(400);
+        expect(response.body).toEqual({ error: 'Missing or invalid locations array.' });
+        expect(normalizeLocations).not.toHaveBeenCalled();
+    });
     
     it('POST /api/route should successfully return coordinates, route, and weather', async () => {
         const response = await request(app)
             .post('/api/route')
             .send({ locations: ['Rexburg, ID', 'Coeur d\'Alene, ID'] });
 
-        // FIX: Expect 200 OK for a successful request
         expect(response.status).toBe(200);
         
         expect(response.body).toHaveProperty('coordinates');
+        expect(response.body).toHaveProperty('sampledCoordinates');
         expect(response.body).toHaveProperty('route');
         expect(response.body).toHaveProperty('weather');
         
         expect(response.body.weather[0].name).toBe("Rexburg");
+        expect(sampleRoutePoints).toHaveBeenCalledTimes(1);
+        expect(getWeather).toHaveBeenCalledWith(
+            [{ lat: 43.82, lng: -111.79 }, { lat: 47.67, lng: -116.78 }],
+            [1710960000, 1710985092]
+        );
     });
 
-    it('POST /api/route should fail gracefully if missing data', async () => {
+    it('POST /api/route should return 500 if a downstream service fails', async () => {
+        normalizeLocations.mockRejectedValueOnce(new Error('Geocoding unavailable'));
+
         const response = await request(app)
             .post('/api/route')
-            .send({}); 
+            .send({ locations: [{ type: 'name', value: 'Boise, ID' }] });
 
-        // FIX: Expect 400 Bad Request for user errors
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ error: 'Failed to generate route data.' });
+    });
+
+    it('POST /api/review should return 400 when start or end is missing', async () => {
+        const response = await request(app)
+            .post('/api/review')
+            .send({ startCoords: '43.82, -111.79' });
+
         expect(response.status).toBe(400);
-        expect(response.body).toHaveProperty('error');
+        expect(response.body).toEqual({ error: 'Missing start or end coordinates' });
+        expect(generateSafetyReview).not.toHaveBeenCalled();
+    });
+
+    it('POST /api/review should return review text when service succeeds', async () => {
+        const response = await request(app)
+            .post('/api/review')
+            .send({
+                startCoords: '43.82, -111.79',
+                endCoords: '47.67, -116.78',
+                midCoords: ['45.0, -113.0']
+            });
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual({ review: 'Safe trip overall with light rain near destination.' });
+        expect(generateSafetyReview).toHaveBeenCalledWith(
+            '43.82, -111.79',
+            '47.67, -116.78',
+            ['45.0, -113.0']
+        );
+    });
+
+    it('POST /api/review should return 500 when AI service throws', async () => {
+        generateSafetyReview.mockRejectedValueOnce(new Error('Model timeout'));
+
+        const response = await request(app)
+            .post('/api/review')
+            .send({
+                startCoords: '43.82, -111.79',
+                endCoords: '47.67, -116.78',
+                midCoords: []
+            });
+
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ error: 'Failed to generate review.' });
     });
 });

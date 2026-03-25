@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { toggleRainRadar, toggleAnimatedPrecipitation } from '../handlers/rainRadarHandler.js';
 
 // 1. Mock Leaflet entirely
 const mockAddTo = vi.fn();
@@ -22,8 +21,11 @@ global.fetch = vi.fn();
 describe('Rain Radar Handler Tests', () => {
     // A fake map object to pass into your functions
     let mockMap;
+    let toggleRainRadar;
+    let toggleAnimatedPrecipitation;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        vi.resetModules();
         vi.clearAllMocks();
         
         // Reset our fake map before every test
@@ -34,6 +36,8 @@ describe('Rain Radar Handler Tests', () => {
 
         // Reset the global window variable your code uses
         window.rainViewerFrames = undefined;
+
+        ({ toggleRainRadar, toggleAnimatedPrecipitation } = await import('../handlers/rainRadarHandler.js'));
     });
 
     afterEach(() => {
@@ -131,5 +135,18 @@ describe('Rain Radar Handler Tests', () => {
             { path: '/past-1' },
             { path: '/future-1' }
         ]);
+    });
+
+    it('should not create a layer when radar frames are unavailable', async () => {
+        fetch.mockResolvedValueOnce({
+            json: () => Promise.resolve({
+                radar: { past: [] }
+            })
+        });
+
+        await toggleRainRadar(mockMap);
+
+        expect(L.tileLayer).not.toHaveBeenCalled();
+        expect(mockAddTo).not.toHaveBeenCalled();
     });
 });
