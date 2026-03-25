@@ -17,7 +17,7 @@ app.use((req, res, next) => {
         "default-src 'self'; " +
         "script-src 'self'; " +
         "style-src 'self' 'unsafe-inline'; " +
-        "img-src 'self' data: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://tilecache.rainviewer.com; " +
+        "img-src 'self' data: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://tilecache.rainviewer.com https://openweathermap.org; " +
         "connect-src 'self' https://api.rainviewer.com;"
     );
     next();
