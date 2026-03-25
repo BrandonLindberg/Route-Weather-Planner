@@ -253,7 +253,7 @@ async function getTripReview() {
     }
 
     try {
-        const response = await fetch(`http://localhost:4010/api/review`, {
+        const response = await fetch(`/api/review`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
