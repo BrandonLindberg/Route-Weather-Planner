@@ -48,6 +48,7 @@ describe('Route Data Handler Tests', () => {
         };
 
         fetch.mockResolvedValueOnce({
+            ok: true,
             json: () => Promise.resolve(mockBackendResponse)
         });
 
@@ -93,6 +94,7 @@ describe('Route Data Handler Tests', () => {
         };
 
         fetch.mockResolvedValueOnce({
+            ok: true,
             json: () => Promise.resolve(mockBackendResponse)
         });
 
@@ -126,6 +128,7 @@ describe('Route Data Handler Tests', () => {
 
         // It should have caught the error and logged it
         expect(consoleLogSpy).toHaveBeenCalledWith(mockError);
+        expect(global.alert).toHaveBeenCalledWith('Server Offline');
         
         // It should NOT have tried to render anything
         expect(renderRoute).not.toHaveBeenCalled();
@@ -133,6 +136,7 @@ describe('Route Data Handler Tests', () => {
 
     it('should catch and log errors if payload is malformed', async () => {
         fetch.mockResolvedValueOnce({
+            ok: true,
             json: () => Promise.resolve({
                 weather: []
             })
@@ -141,6 +145,20 @@ describe('Route Data Handler Tests', () => {
         await fetchRouteData(['Rexburg, ID'], {});
 
         expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+        expect(global.alert).toHaveBeenCalledWith('Could not generate a valid route for those points. Please try different locations.');
         expect(renderRoute).not.toHaveBeenCalled();
+    });
+
+    it('should alert with backend error message when route endpoint returns non-OK', async () => {
+        fetch.mockResolvedValueOnce({
+            ok: false,
+            json: () => Promise.resolve({ error: 'No drivable route found between selected points.' })
+        });
+
+        await fetchRouteData(['Ocean Point A', 'Ocean Point B'], {});
+
+        expect(global.alert).toHaveBeenCalledWith('No drivable route found between selected points.');
+        expect(renderRoute).not.toHaveBeenCalled();
+        expect(renderWeatherUI).not.toHaveBeenCalled();
     });
 });

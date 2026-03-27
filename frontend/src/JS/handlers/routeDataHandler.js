@@ -2,6 +2,7 @@ import { renderRoute, renderWeatherUI } from "./renderRouteWeatherHandler.js";
 import { addPinFromName } from "../main.js";
 
 export async function fetchRouteData(locations, map) {
+    const DEFAULT_ROUTE_ERROR = "Could not generate a valid route for those points. Please try different locations.";
 
     if (locations.length > 0) {
         try {
@@ -12,6 +13,14 @@ export async function fetchRouteData(locations, map) {
             });
 
             const routeData = await locData.json();
+
+            if (!locData.ok) {
+                throw new Error(routeData?.error || DEFAULT_ROUTE_ERROR);
+            }
+
+            if (!routeData?.route || !Array.isArray(routeData.coordinates) || !Array.isArray(routeData.weather)) {
+                throw new Error(DEFAULT_ROUTE_ERROR);
+            }
 
             const route = routeData.route;
             const coords = routeData.coordinates;
@@ -27,6 +36,7 @@ export async function fetchRouteData(locations, map) {
         }
         catch(err) {
             console.log(err);
+            alert(err?.message || DEFAULT_ROUTE_ERROR);
         }
     }
     else {

@@ -5,6 +5,8 @@ let rainLayer = null;
 let cachedRainData = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes (Radar updates roughly every 10m)
+const RADAR_MAX_ZOOM = 7;
+let previousMapMaxZoom = null;
 
 // Optimized Leaflet Tile Options
 const TILE_OPTS = {
@@ -12,12 +14,39 @@ const TILE_OPTS = {
     pane: 'radarPane',
     attribution: '© RainViewer',
     maxZoom: 19,
+    maxNativeZoom: 10,
     tileSize: 256,
     zIndex: 10,
     keepBuffer: 4,         // Keep off-screen tiles in memory so they don't reload when panning back
-    updateWhenIdle: false, // Load tiles *during* panning (smoother) rather than waiting for stop
-    updateInterval: 100    // Check for new tiles more frequently
+    updateWhenIdle: true,  // Avoid churn while panning/zooming; request tiles after movement settles
+    updateWhenZooming: false,
+    updateInterval: 250
 };
+
+function applyRadarZoomClamp(map) {
+    if (typeof map?.getMaxZoom !== 'function' || typeof map?.setMaxZoom !== 'function') return;
+
+    if (previousMapMaxZoom === null) {
+        previousMapMaxZoom = map.getMaxZoom();
+    }
+
+    map.setMaxZoom(Math.min(previousMapMaxZoom, RADAR_MAX_ZOOM));
+
+    if (typeof map?.getZoom === 'function' && typeof map?.setZoom === 'function') {
+        const currentZoom = map.getZoom();
+        if (currentZoom > RADAR_MAX_ZOOM) {
+            map.setZoom(RADAR_MAX_ZOOM);
+        }
+    }
+}
+
+function removeRadarZoomClamp(map) {
+    if (previousMapMaxZoom === null) return;
+    if (typeof map?.setMaxZoom === 'function') {
+        map.setMaxZoom(previousMapMaxZoom);
+    }
+    previousMapMaxZoom = null;
+}
 
 /**
  * Helper to get RainViewer data with caching
@@ -47,6 +76,7 @@ export async function toggleRainRadar(map) {
     if (rainLayer && map.hasLayer(rainLayer)) {
         map.removeLayer(rainLayer);
         rainLayer = null;
+        removeRadarZoomClamp(map);
         return;
     }
 
@@ -60,6 +90,7 @@ export async function toggleRainRadar(map) {
             
             rainLayer = L.tileLayer(url, TILE_OPTS);
             rainLayer.addTo(map);
+            applyRadarZoomClamp(map);
             console.log('RainViewer precipitation layer added');
         }
     } catch (error) {
@@ -75,6 +106,7 @@ export async function toggleAnimatedPrecipitation(map) {
     if (rainLayer && map.hasLayer(rainLayer)) {
         map.removeLayer(rainLayer);
         rainLayer = null;
+        removeRadarZoomClamp(map);
         return;
     }
 
@@ -94,6 +126,7 @@ export async function toggleAnimatedPrecipitation(map) {
             });
             
             rainLayer.addTo(map);
+            applyRadarZoomClamp(map);
             
             // Store frames for animation logic elsewhere
             window.rainViewerFrames = allFrames;

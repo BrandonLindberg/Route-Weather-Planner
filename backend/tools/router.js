@@ -7,6 +7,25 @@ import getWeather from "../services/weatherService.js";
 import { generateSafetyReview } from "../services/aiService.js";
 import sampleRoutePoints from "../services/sampleRoutePoints.js";
 
+function getTotalSampleCount(distanceMeters) {
+    const MIN_INTERIOR_POINTS = 1;
+    const MAX_INTERIOR_POINTS = 18;
+    const METERS_PER_INTERIOR_POINT = 75000;
+
+    if (!Number.isFinite(distanceMeters) || distanceMeters <= 0) {
+        return MIN_INTERIOR_POINTS + 2;
+    }
+
+    const interiorPoints = Math.ceil(distanceMeters / METERS_PER_INTERIOR_POINT);
+    const clampedInteriorPoints = Math.min(
+        MAX_INTERIOR_POINTS,
+        Math.max(MIN_INTERIOR_POINTS, interiorPoints)
+    );
+
+    // sampleRoutePoints expects total points including origin/destination.
+    return clampedInteriorPoints + 2;
+}
+
 router.post("/route", async (req, res) => {
     const { locations } = req.body;
 
@@ -44,10 +63,12 @@ router.post("/route", async (req, res) => {
         // ---------------------------------
 
         // Pass both coords and etas array to the weather service
+        const totalSampleCount = getTotalSampleCount(route.distance);
+
         const { coords: sampledCoords, etas: sampledEtas } = sampleRoutePoints(
             route.geometry.coordinates,
             etas,
-            5  // number of weather points — tune this as needed
+            totalSampleCount
         );
         const weather = await getWeather(sampledCoords, sampledEtas);
 

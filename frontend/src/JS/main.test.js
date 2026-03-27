@@ -19,6 +19,7 @@ vi.mock('leaflet/dist/images/marker-shadow.png', () => ({ default: 'shadow.png' 
 
 // 2. Mock Leaflet thoroughly
 const mockAddTo = vi.fn();
+const mockZoomAddTo = vi.fn();
 const mockMapInstance = {
     setView: vi.fn().mockReturnThis(),
     createPane: vi.fn(),
@@ -38,7 +39,14 @@ vi.mock('leaflet', () => {
             },
             map: vi.fn(() => mockMapInstance),
             tileLayer: vi.fn(() => ({ addTo: mockAddTo })),
-            marker: vi.fn(() => ({ addTo: mockAddTo }))
+            marker: vi.fn(() => ({ addTo: mockAddTo })),
+            control: {
+                zoom: vi.fn(() => ({ addTo: mockZoomAddTo }))
+            },
+            DomEvent: {
+                disableScrollPropagation: vi.fn(),
+                disableClickPropagation: vi.fn()
+            }
         }
     };
 });
@@ -88,7 +96,16 @@ describe('Main Entry Point Tests', () => {
         document.dispatchEvent(new Event('DOMContentLoaded'));
 
         // Did it create the map on the #map-container div?
-        expect(L.map).toHaveBeenCalledWith('map-container', { doubleClickZoom: false });
+        expect(L.map).toHaveBeenCalledWith('map-container', {
+            doubleClickZoom: false,
+            zoomControl: false,
+            minZoom: 3,
+            maxBounds: [[-85, -1000000], [85, 1000000]],
+            maxBoundsViscosity: 1.0
+        });
+
+        // Did it move zoom controls to the bottom-left?
+        expect(L.control.zoom).toHaveBeenCalledWith({ position: 'bottomleft' });
         
         // Did it set the initial view to Idaho?
         expect(mockMapInstance.setView).toHaveBeenCalledWith([43.8260, -111.7897], 13);

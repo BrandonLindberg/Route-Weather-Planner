@@ -7,6 +7,8 @@ export function renderWeatherUI(weatherData) {
     console.log("=== WEATHER RENDER CALCULATION ===");
 
     weatherData.forEach((item, index) => {
+        const isOrigin = index === 0;
+        const isDestination = index === weatherData.length - 1;
         const temp = Math.round(item.main.temp);
         const desc = item.weather[0].description;
         const iconCode = item.weather[0].icon;
@@ -33,18 +35,26 @@ export function renderWeatherUI(weatherData) {
 
         console.log(`Final Displayed Time: ${timeString}`);
         
-        const timeLabel = index === 0 ? "Current Time" : `ETA: ${timeString} ${tzAbbr}`;
+        const timeLabel = isOrigin ? "Current Time" : `ETA: ${timeString} ${tzAbbr}`;
+        const pointRole = isOrigin
+            ? "Origin"
+            : isDestination
+                ? "Destination"
+                : `Waypoint ${index}`;
         
         // Build the UI
         const li = document.createElement('li');
         li.className = 'pin-item';
         li.innerHTML = `
-            <div>
+            <div class="pin-main">
+                <div class="pin-meta-row">
+                    <span class="pin-role ${isOrigin ? 'origin' : isDestination ? 'destination' : 'waypoint'}">${pointRole}</span>
+                </div>
                 <strong>${item.name}</strong><br>
                 <span style="text-transform: capitalize;">${desc}</span><br>
                 <span style="font-size: 0.85rem; color: #666; font-weight: 500;">${timeLabel}</span>
             </div>
-            <div style="text-align: right;">
+            <div class="pin-weather">
                 <span style="font-size: 1.2rem; font-weight: bold;">${temp}°F</span>
                 <img src="https://openweathermap.org/img/wn/${iconCode}.png" alt="icon" style="width: 30px; vertical-align: middle;">
             </div>
@@ -77,6 +87,13 @@ export function renderRoute(route, map) {
         routeLayer = null;
     }
     routeLayer = L.geoJSON(route.geometry).addTo(map);
+
+    const bounds = routeLayer?.getBounds?.();
+    if (bounds?.isValid?.()) {
+        map.fitBounds(bounds, {
+            padding: [40, 40]
+        });
+    }
 }
 
 export function clearMapData(markers, map) {

@@ -20,6 +20,8 @@ L.Icon.Default.mergeOptions({
 });
 
 const API_URL = import.meta.env.VITE_API_URL
+const MIN_MAP_ZOOM = 3;
+const MAP_BOUNDS = [[-85, -1000000], [85, 1000000]];
 
 // ==============
 // Global States
@@ -40,17 +42,44 @@ document.getElementById('ai-btn').addEventListener('click', getTripReview);
 // =========
 function initMap() {
     // inits map
-    map = L.map('map-container', {doubleClickZoom: false}).setView([43.8260, -111.7897], 13);
+    map = L.map('map-container', {
+        doubleClickZoom: false,
+        zoomControl: false,
+        minZoom: MIN_MAP_ZOOM,
+        maxBounds: MAP_BOUNDS,
+        maxBoundsViscosity: 1.0
+    }).setView([43.8260, -111.7897], 13);
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
     currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        minZoom: MIN_MAP_ZOOM,
         maxZoom: 17,
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
     map.createPane('radarPane');
     map.getPane('radarPane').style.zIndex = 650;
+
+    setupOverlayInteractionGuards();
     
     // adds up to 5 markers
     map.on('dblclick', (e) => addPin(e));
+}
+
+function setupOverlayInteractionGuards() {
+    const guardedSelectors = [
+        '#ui-section',
+        '#weather-section',
+        '#ai-response-text',
+        '.weather-list-scroll'
+    ];
+
+    guardedSelectors.forEach((selector) => {
+        const element = document.querySelector(selector);
+        if (!element) return;
+
+        L.DomEvent.disableScrollPropagation(element);
+        L.DomEvent.disableClickPropagation(element);
+    });
 }
 
 // ===========
@@ -63,6 +92,7 @@ function addStreetLayer() {
     currentTileLayer = L.tileLayer(
         'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
         {
+            minZoom: MIN_MAP_ZOOM,
             maxZoom: 17,
             attribution: '© OpenStreetMap'
         }
@@ -83,6 +113,7 @@ function switchLayer(type) {
     currentTileLayer = L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         {
+            minZoom: MIN_MAP_ZOOM,
             attribution: 'Tiles © Esri'
         }
     ).addTo(map);
@@ -116,8 +147,6 @@ function addPin(e) {
 }
 
 export function addPinFromName(lat, lng) {
-    if (markers.length >= 10) return;
-
     const crds = [lat, lng];
     const marker = L.marker(crds).addTo(map);
 

@@ -19,6 +19,7 @@ vi.mock('../services/normalizeService.js', () => ({
 
 vi.mock('../services/routeService.js', () => ({
     default: vi.fn().mockResolvedValue({ 
+        distance: 500000,
         legs: [{ duration: 29520 }],
         geometry: { coordinates: [[-111.79, 43.82], [-116.78, 47.67]] } 
     })
@@ -74,6 +75,11 @@ describe('Router Integration Tests', () => {
         
         expect(response.body.weather[0].name).toBe("Rexburg");
         expect(sampleRoutePoints).toHaveBeenCalledTimes(1);
+        expect(sampleRoutePoints).toHaveBeenCalledWith(
+            [[-111.79, 43.82], [-116.78, 47.67]],
+            expect.any(Array),
+            9
+        );
         expect(getWeather).toHaveBeenCalledWith(
             [{ lat: 43.82, lng: -111.79 }, { lat: 47.67, lng: -116.78 }],
             [1710960000, 1710985092]

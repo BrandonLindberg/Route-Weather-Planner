@@ -67,12 +67,27 @@ body, html {
 }
 
 /* UI Section */
-#ui-section {
+#floating-panels {
     position: absolute;
     top: 10px;
-    left: 50px;
-    z-index: 1000;
+    left: 15px;
+    z-index: 2000;
     width: 350px;
+    max-height: calc(100vh - 20px);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.floating-section {
+    pointer-events: auto;
+}
+
+#ui-section {
+    position: relative;
+    z-index: 1000;
+    width: 100%;
 
     background-color: white;
     border: 2px solid #f8f9fa;
@@ -105,37 +120,50 @@ body, html {
     transition: all .4s ease;
 }
 
-#hidden-checkbox:checked ~ #ui-section .control-group {
+#hidden-checkbox:checked ~ #floating-panels #ui-section .control-group {
     max-height: 0;
     margin: 0 auto;
     padding: 0 5px;
     overflow: hidden;
 }
 
-#hidden-checkbox:checked ~ #ui-section .logo-area {
+#hidden-checkbox:checked ~ #floating-panels #ui-section .logo-area {
     max-height: 0;
     margin: 0 auto;
     overflow: hidden;
 }
 
-#hidden-checkbox:checked ~ #ui-section #expand .arrow {
+#hidden-checkbox:checked ~ #floating-panels #ui-section #expand .arrow {
     transform: rotate(180deg);
 }
 
 /* Weather Section */
 #weather-section {
     display: none;
-    position: absolute;
-    top: 10px;
-    left: 415px;
+    position: relative;
     z-index: 2000;
-    width: 350px;
+    width: 100%;
+    max-height: calc(100vh - 20px);
 
     background-color: white;
     border: 2px solid #f8f9fa;
     border-radius: 8px;
 
     padding: 2px 6px;
+}
+
+.weather-list-scroll {
+    max-height: min(42vh, 360px);
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+#weather-section .control-group {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
 }
 
 #pin-list {
@@ -145,14 +173,70 @@ body, html {
 #pin-list li {
     display: flex;
     justify-content: space-between;
-    padding: 5px 0;
+    gap: 10px;
+    padding: 8px 0 16px;
+    position: relative;
 }
 
 #pin-list li:not(:last-child) {
     border-bottom: 1px solid #dfe6e9;
 }
 
-#hidden-checkbox-w:checked ~ #weather-section .control-group {
+#pin-list li:not(:last-child)::after {
+    content: "Travel direction ↓";
+    position: absolute;
+    left: 0;
+    bottom: 2px;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    color: #7b8794;
+}
+
+.pin-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.pin-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.pin-role {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 3px 8px;
+    text-transform: uppercase;
+}
+
+.pin-role.origin {
+    background: #eaf7ec;
+    color: #1f7a39;
+}
+
+.pin-role.destination {
+    background: #fdeceb;
+    color: #b9382b;
+}
+
+.pin-role.waypoint {
+    background: #eef4fd;
+    color: #2f5fa3;
+}
+
+.pin-weather {
+    text-align: right;
+    white-space: nowrap;
+}
+
+#hidden-checkbox-w:checked ~ #floating-panels #weather-section .control-group {
     max-height: 0;
     margin: 0;
     padding: 0 5px;
@@ -164,12 +248,12 @@ body, html {
     transition: all .4s ease;
 }
 
-#hidden-checkbox-w:checked ~ #weather-section .logo-area {
+#hidden-checkbox-w:checked ~ #floating-panels #weather-section .logo-area {
     max-height: 0;
     overflow: hidden;
 }
 
-#hidden-checkbox-w:checked ~ #weather-section #expand-w .arrow-w {
+#hidden-checkbox-w:checked ~ #floating-panels #weather-section #expand-w .arrow-w {
     transform: rotate(180deg);
 }
 
@@ -223,6 +307,17 @@ button {
 #radar-btn {
     background: #8e44ad;
     color: white;
+}
+
+.radar-zoom-note {
+    margin: 6px 4px 2px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: #f1edf7;
+    border: 1px solid #dfd3ee;
+    color: #5f4a78;
+    font-size: 0.78rem;
+    line-height: 1.35;
 }
 
 #floating-confirm-btn {

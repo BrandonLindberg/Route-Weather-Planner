@@ -3,8 +3,13 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 
 // 1. Mock Leaflet (L) globally since it's not imported at the top of your file
-const mockAddTo = vi.fn(() => ({ id: 'route-layer' }));
+const mockBounds = { isValid: vi.fn(() => true) };
+const mockAddTo = vi.fn(() => ({
+    id: 'route-layer',
+    getBounds: vi.fn(() => mockBounds)
+}));
 const mockRemoveLayer = vi.fn();
+const mockFitBounds = vi.fn();
 global.L = {
     geoJSON: vi.fn(() => ({
         addTo: mockAddTo
@@ -35,7 +40,8 @@ describe('Render Route & Weather Handler Tests', () => {
 
         // Setup a fake Leaflet map object
         mockMap = {
-            removeLayer: mockRemoveLayer
+            removeLayer: mockRemoveLayer,
+            fitBounds: mockFitBounds
         };
     });
 
@@ -73,6 +79,10 @@ describe('Render Route & Weather Handler Tests', () => {
         expect(global.L.geoJSON).toHaveBeenCalledWith(mockRoute.geometry);
         // Did it attach it to the map?
         expect(mockAddTo).toHaveBeenCalledWith(mockMap);
+        // Did it zoom/pan to comfortably fit the full route?
+        expect(mockFitBounds).toHaveBeenCalledWith(mockBounds, {
+            padding: [40, 40]
+        });
     });
 
     it('should clear all map data, markers, and DOM sections', () => {

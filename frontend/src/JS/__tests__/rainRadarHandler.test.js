@@ -31,7 +31,11 @@ describe('Rain Radar Handler Tests', () => {
         // Reset our fake map before every test
         mockMap = {
             hasLayer: vi.fn().mockReturnValue(false),
-            removeLayer: vi.fn()
+            removeLayer: vi.fn(),
+            getMaxZoom: vi.fn(() => 17),
+            setMaxZoom: vi.fn(),
+            getZoom: vi.fn(() => 12),
+            setZoom: vi.fn()
         };
 
         // Reset the global window variable your code uses
@@ -67,6 +71,10 @@ describe('Rain Radar Handler Tests', () => {
 
         // Did it add that layer to the map?
         expect(mockAddTo).toHaveBeenCalledWith(mockMap);
+
+        // Did it clamp zoom while radar is active?
+        expect(mockMap.setMaxZoom).toHaveBeenCalledWith(7);
+        expect(mockMap.setZoom).toHaveBeenCalledWith(7);
     });
 
     it('should remove the layer if it already exists (Toggle Off)', async () => {
@@ -84,6 +92,7 @@ describe('Rain Radar Handler Tests', () => {
 
         // It should have called removeLayer
         expect(mockMap.removeLayer).toHaveBeenCalledTimes(1);
+        expect(mockMap.setMaxZoom).toHaveBeenCalledWith(17);
     });
 
     it('should use cached data and NOT fetch again within 10 minutes', async () => {
