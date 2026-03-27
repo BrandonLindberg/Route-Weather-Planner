@@ -12,9 +12,11 @@ vi.mock('../handlers/renderRouteWeatherHandler.js', () => ({
     renderWeatherUI: vi.fn()
 }));
 
-import { addPinFromName } from '../main.js';
+import { addPinFromName, addSampledWaypoint, addEndpointPin } from '../main.js';
 vi.mock('../main.js', () => ({
-    addPinFromName: vi.fn()
+    addPinFromName: vi.fn(),
+    addSampledWaypoint: vi.fn(),
+    addEndpointPin: vi.fn()
 }));
 
 // 2. Mock globals
@@ -67,8 +69,10 @@ describe('Route Data Handler Tests', () => {
         });
 
         // 2. Did it loop through coordinates and add pins?
-        expect(addPinFromName).toHaveBeenCalledTimes(2);
-        expect(addPinFromName).toHaveBeenNthCalledWith(1, 43.82, -111.79);
+        expect(addEndpointPin).toHaveBeenCalledTimes(2);
+        expect(addEndpointPin).toHaveBeenNthCalledWith(1, 43.82, -111.79, 'origin');
+        expect(addEndpointPin).toHaveBeenNthCalledWith(2, 47.67, -116.78, 'destination');
+        expect(addPinFromName).not.toHaveBeenCalled();
 
         // 3. Did it delegate the data to the render functions?
         expect(renderRoute).toHaveBeenCalledWith(mockBackendResponse.route, mockMap);
@@ -100,9 +104,13 @@ describe('Route Data Handler Tests', () => {
 
         await fetchRouteData(['Rexburg, ID', 'Coeur d\'Alene, ID'], { dummyMap: true });
 
-        expect(addPinFromName).toHaveBeenCalledTimes(4);
-        expect(addPinFromName).toHaveBeenNthCalledWith(3, 45.12, -113.44);
-        expect(addPinFromName).toHaveBeenNthCalledWith(4, 46.55, -115.02);
+        expect(addEndpointPin).toHaveBeenCalledTimes(2);
+        expect(addEndpointPin).toHaveBeenNthCalledWith(1, 43.82, -111.79, 'origin');
+        expect(addEndpointPin).toHaveBeenNthCalledWith(2, 47.67, -116.78, 'destination');
+        expect(addPinFromName).not.toHaveBeenCalled();
+        expect(addSampledWaypoint).toHaveBeenCalledTimes(2);
+        expect(addSampledWaypoint).toHaveBeenNthCalledWith(1, 45.12, -113.44, 1);
+        expect(addSampledWaypoint).toHaveBeenNthCalledWith(2, 46.55, -115.02, 2);
     });
 
     it('should show an alert and abort if the locations array is empty', async () => {

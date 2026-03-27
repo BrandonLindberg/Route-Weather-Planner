@@ -320,6 +320,22 @@ button {
     line-height: 1.35;
 }
 
+.sampled-waypoint-tooltip {
+    background: #eef4fd;
+    border: 1px solid #d3e3fb;
+    border-radius: 999px;
+    color: #2f5fa3;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 2px 8px;
+    box-shadow: none;
+}
+
+.sampled-waypoint-tooltip::before {
+    display: none;
+}
+
 #floating-confirm-btn {
     background: #27ae60;
     color: white;

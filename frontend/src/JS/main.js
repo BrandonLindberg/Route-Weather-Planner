@@ -22,6 +22,8 @@ L.Icon.Default.mergeOptions({
 const API_URL = import.meta.env.VITE_API_URL
 const MIN_MAP_ZOOM = 3;
 const MAP_BOUNDS = [[-85, -1000000], [85, 1000000]];
+const ORIGIN_MARKER_COLOR = '#1f7a39';
+const DESTINATION_MARKER_COLOR = '#b9382b';
 
 // ==============
 // Global States
@@ -29,6 +31,25 @@ const MAP_BOUNDS = [[-85, -1000000], [85, 1000000]];
 let map;
 let markers = [];
 let currentTileLayer;
+
+function createColoredPinIcon(color) {
+    const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="42" viewBox="0 0 28 42">
+            <path fill="${color}" d="M14 0C6.268 0 0 6.268 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.268 21.732 0 14 0z"/>
+            <circle cx="14" cy="14" r="5" fill="#ffffff"/>
+        </svg>
+    `;
+
+    return L.icon({
+        iconUrl: `data:image/svg+xml,${encodeURIComponent(svg)}`,
+        iconSize: [28, 42],
+        iconAnchor: [14, 41],
+        popupAnchor: [1, -34],
+        shadowUrl: markerShadow,
+        shadowSize: [41, 41],
+        shadowAnchor: [13, 41]
+    });
+}
 
 document.getElementById('floating-confirm-btn').addEventListener('click', planRoutePins);
 document.getElementById('floating-clear-btn').addEventListener('click', () => clearMapData(markers, map));
@@ -157,6 +178,42 @@ export function addPinFromName(lat, lng) {
     
     // Center the map on the new pin so the user sees it
     map.setView(crds, 6);
+}
+
+export function addSampledWaypoint(lat, lng, waypointNumber) {
+    const crds = [lat, lng];
+    const marker = L.circleMarker(crds, {
+        radius: 5,
+        color: '#2f7eea',
+        weight: 2,
+        fillColor: '#ffffff',
+        fillOpacity: 0.95,
+        pane: 'markerPane'
+    }).addTo(map);
+
+    marker.bindTooltip(`Waypoint ${waypointNumber}`, {
+        direction: 'top',
+        offset: [0, -8],
+        opacity: 0.95,
+        className: 'sampled-waypoint-tooltip'
+    });
+
+    markers.push({
+        marker: marker,
+        crds: crds
+    });
+}
+
+export function addEndpointPin(lat, lng, role) {
+    const color = role === 'origin' ? ORIGIN_MARKER_COLOR : DESTINATION_MARKER_COLOR;
+    const icon = createColoredPinIcon(color);
+    const crds = [lat, lng];
+    const marker = L.marker(crds, { icon }).addTo(map);
+
+    markers.push({
+        marker: marker,
+        crds: crds
+    });
 }
 
 // ======================================
