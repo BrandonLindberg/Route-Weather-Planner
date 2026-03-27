@@ -12,17 +12,36 @@ function sampleRoutePoints(coordinates, etas, numSamples) {
     const total = coordinates.length;
     if (total === 0) return { coords: [], etas: [] };
 
+    if (numSamples <= 0) return { coords: [], etas: [] };
+
     const sampledCoords = [];
     const sampledEtas = [];
 
     const startEta = etas[0];
     const endEta = etas[etas.length - 1];
 
+    if (numSamples === 1) {
+        const [lng, lat] = coordinates[0];
+        return {
+            coords: [{ lat, lng }],
+            etas: [startEta]
+        };
+    }
+
+    const lastCoordinateIndex = total - 1;
+
     for (let i = 0; i < numSamples; i++) {
-        
         const fraction = i / (numSamples - 1);
 
-        const index = Math.min(Math.floor(fraction * (total - 1)), total - 1);
+        let index;
+        if (i === 0) {
+            index = 0;
+        } else if (i === numSamples - 1) {
+            index = lastCoordinateIndex;
+        } else {
+            index = Math.round(fraction * lastCoordinateIndex);
+        }
+
         const [lng, lat] = coordinates[index];
 
         sampledCoords.push({ lat, lng });

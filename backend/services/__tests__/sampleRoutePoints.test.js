@@ -42,9 +42,34 @@ describe('sampleRoutePoints', () => {
 		expect(result.coords).toEqual([
 			{ lat: 43.82, lng: -111.79 },
 			{ lat: 43.82, lng: -111.79 },
-			{ lat: 43.82, lng: -111.79 },
+			{ lat: 47.67, lng: -116.78 },
 			{ lat: 47.67, lng: -116.78 }
 		]);
 		expect(result.etas).toEqual([500, 600, 700, 800]);
+	});
+
+	it('returns only the start point when numSamples is 1', () => {
+		const coordinates = [
+			[-111.79, 43.82],
+			[-116.78, 47.67]
+		];
+		const etas = [500, 800];
+
+		const result = sampleRoutePoints(coordinates, etas, 1);
+
+		expect(result.coords).toEqual([{ lat: 43.82, lng: -111.79 }]);
+		expect(result.etas).toEqual([500]);
+	});
+
+	it('returns empty arrays when numSamples is 0', () => {
+		const coordinates = [
+			[-111.79, 43.82],
+			[-116.78, 47.67]
+		];
+		const etas = [500, 800];
+
+		const result = sampleRoutePoints(coordinates, etas, 0);
+
+		expect(result).toEqual({ coords: [], etas: [] });
 	});
 });
