@@ -36,8 +36,12 @@ const DESTINATION_MARKER_COLOR = '#b9382b';
 let map;
 let markers = [];
 let currentTileLayer;
+let isRouteLoading = false;
 const originInput = document.getElementById('origin-input');
 const destinationInput = document.getElementById('destination-input');
+const confirmRouteBtn = document.getElementById('floating-confirm-btn');
+const clearMapBtn = document.getElementById('floating-clear-btn');
+const routeLoadingStatus = document.getElementById('route-loading-status');
 
 function createColoredPinIcon(color) {
     const svg = `
@@ -66,6 +70,10 @@ document.getElementById('radar-btn').addEventListener('click', () => toggleRainR
 document.getElementById('ai-btn').addEventListener('click', getTripReview);
 
 function clearMapAndInputs() {
+    if (isRouteLoading) {
+        return;
+    }
+
     clearMapData(markers, map);
 
     if (originInput) {
@@ -74,6 +82,35 @@ function clearMapAndInputs() {
 
     if (destinationInput) {
         destinationInput.value = '';
+    }
+
+    setRouteLoadingState(false);
+}
+
+function setRouteLoadingState(isLoading) {
+    isRouteLoading = isLoading;
+
+    if (confirmRouteBtn) {
+        confirmRouteBtn.disabled = isLoading;
+        confirmRouteBtn.innerText = isLoading ? 'Generating Route...' : 'Get Route & Weather';
+    }
+
+    if (clearMapBtn) {
+        clearMapBtn.disabled = isLoading;
+    }
+
+    if (originInput) {
+        originInput.disabled = isLoading;
+    }
+
+    if (destinationInput) {
+        destinationInput.disabled = isLoading;
+    }
+
+    if (routeLoadingStatus) {
+        routeLoadingStatus.innerText = isLoading
+            ? 'Building route and weather timeline...'
+            : '';
     }
 }
 
@@ -262,7 +299,11 @@ export function addEndpointPin(lat, lng, role) {
 // TODO: We should also add some error handling here for invalid place names or failed API calls, but for the MVP, this will do. We can always enhance it later with user-friendly error messages and input validation.
 // TODO: We could add an option to calculate the gas needed for the trip based on the distance and average fuel efficiency which could be a fun addition for users planning their road trip budget.
 // TODO: We could also add an option to include rest stops or points of interest along the route, which could be a fun feature for users planning a road trip.
-function planRoutePins(){
+async function planRoutePins(){
+    if (isRouteLoading) {
+        return;
+    }
+
     const origin = originInput ? originInput.value.trim() : '';
     const destination = destinationInput ? destinationInput.value.trim() : '';
     const typedLocationsProvided = origin.length > 0 || destination.length > 0;
@@ -277,20 +318,26 @@ function planRoutePins(){
         return;
     }
 
+    setRouteLoadingState(true);
+
     // Always clear existing route artifacts before generating a fresh route.
     clearMapData(markers, map);
 
-    if (origin && destination) {
-        const routeLocations = [
-            { type: 'name', value: origin },
-            { type: 'name', value: destination }
-        ];
+    try {
+        if (origin && destination) {
+            const routeLocations = [
+                { type: 'name', value: origin },
+                { type: 'name', value: destination }
+            ];
 
-        fetchRouteData(routeLocations, map);
-        return;
+            await fetchRouteData(routeLocations, map);
+            return;
+        }
+
+        await fetchRouteData(waypointCoords, map);
+    } finally {
+        setRouteLoadingState(false);
     }
-
-    fetchRouteData(waypointCoords, map);
 }
     
 // ==========
