@@ -1,18 +1,27 @@
 import { renderRoute, renderWeatherUI } from "./renderRouteWeatherHandler.js";
 import { addPinFromName, addSampledWaypoint, addEndpointPin } from "../main.js";
 
+const API_URL = (import.meta.env.VITE_API_URL || '').trim();
+const ROUTE_ENDPOINT = API_URL ? `${API_URL}/api/route` : '/api/route';
+
 export async function fetchRouteData(locations, map) {
     const DEFAULT_ROUTE_ERROR = "Could not generate a valid route for those points. Please try different locations.";
 
     if (locations.length > 0) {
         try {
-            const locData = await fetch(`/api/route`, {
+            const locData = await fetch(ROUTE_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ locations })
             });
 
-            const routeData = await locData.json();
+            let routeData = {};
+
+            try {
+                routeData = await locData.json();
+            } catch {
+                routeData = {};
+            }
 
             if (!locData.ok) {
                 throw new Error(routeData?.error || DEFAULT_ROUTE_ERROR);
@@ -26,6 +35,7 @@ export async function fetchRouteData(locations, map) {
             const coords = routeData.coordinates;
             const sampledCoords = routeData.sampledCoordinates ?? [];
             const weather = routeData.weather;
+            const interiorWeather = weather.slice(1, -1);
 
             coords.forEach((c, index) => {
                 if (index === 0) {
@@ -36,7 +46,10 @@ export async function fetchRouteData(locations, map) {
                     addPinFromName(c.lat, c.lng);
                 }
             });
-            sampledCoords.forEach((c, index) => addSampledWaypoint(c.lat, c.lng, index + 1));
+            sampledCoords.forEach((c, index) => {
+                const waypointLocationName = interiorWeather[index]?.name;
+                addSampledWaypoint(c.lat, c.lng, index + 1, waypointLocationName);
+            });
 
             renderRoute(route, map);
             renderWeatherUI(weather);

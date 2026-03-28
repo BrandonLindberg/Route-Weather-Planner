@@ -80,4 +80,10 @@ describe('Normalize Service Tests', () => {
         expect(geocodeName).toHaveBeenCalledTimes(1);
         expect(geocodeName).toHaveBeenCalledWith("Coeur d'Alene, ID");
     });
+
+    it('should throw an error for an unsupported location type', async () => {
+        await expect(normalizeLocations([
+            { type: 'zip', value: '83440' }
+        ])).rejects.toThrow("Invalid location type. Expected 'coords' or 'name'.");
+    });
 });

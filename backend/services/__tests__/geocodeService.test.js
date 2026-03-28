@@ -20,6 +20,7 @@ describe('Geocode Service Tests', () => {
         
         // Tell fetch to return our fake data
         fetch.mockResolvedValue({
+            ok: true,
             json: () => Promise.resolve(mockNominatimData)
         });
 
@@ -30,7 +31,15 @@ describe('Geocode Service Tests', () => {
         expect(fetch).toHaveBeenCalledTimes(1);
         
         // Did it encode the URL correctly? (Replacing spaces with %20, commas with %2C)
-        expect(fetch).toHaveBeenCalledWith('https://nominatim.openstreetmap.org/search?format=json&q=Rexburg%2C%20ID');
+        expect(fetch).toHaveBeenCalledWith(
+            'https://nominatim.openstreetmap.org/search?format=json&q=Rexburg%2C%20ID',
+            {
+                headers: {
+                    'User-Agent': 'SkyRoute/1.0 (Route Weather Planner)',
+                    'Accept-Language': 'en-US,en;q=0.9'
+                }
+            }
+        );
         
         // Did it parse the strings into floats properly?
         expect(result.lat).toBe(43.8231);
@@ -43,5 +52,16 @@ describe('Geocode Service Tests', () => {
 
         // We expect the function to throw this error upwards to whoever called it
         await expect(geocodeName('Atlantis')).rejects.toThrow('Network failure');
+    });
+
+    it('should throw a clear error when geocoding returns no results', async () => {
+        fetch.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve([])
+        });
+
+        await expect(geocodeName('A Place That Does Not Exist')).rejects.toThrow(
+            'No geocoding results found for: A Place That Does Not Exist'
+        );
     });
 });

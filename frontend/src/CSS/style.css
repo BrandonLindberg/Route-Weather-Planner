@@ -182,16 +182,6 @@ body, html {
     border-bottom: 1px solid #dfe6e9;
 }
 
-#pin-list li:not(:last-child)::after {
-    content: "Travel direction ↓";
-    position: absolute;
-    left: 0;
-    bottom: 2px;
-    font-size: 0.72rem;
-    letter-spacing: 0.02em;
-    color: #7b8794;
-}
-
 .pin-main {
     flex: 1;
     min-width: 0;
@@ -275,6 +265,16 @@ input[type="text"] {
     display: flex;
     gap: 5px;
     flex-wrap: wrap;
+}
+
+.route-text-inputs {
+    display: grid;
+    gap: 8px;
+    margin: 2px 0 8px;
+}
+
+.route-text-inputs input {
+    width: 100%;
 }
 
 

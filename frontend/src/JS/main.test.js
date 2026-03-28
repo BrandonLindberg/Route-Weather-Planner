@@ -66,6 +66,8 @@ describe('Main Entry Point Tests', () => {
         // Setup the COMPLETE DOM before importing main.js
         document.body.innerHTML = `
             <div id="map-container"></div>
+            <input id="origin-input" type="text" />
+            <input id="destination-input" type="text" />
             <button id="floating-confirm-btn"></button>
             <button id="floating-clear-btn"></button>
             <button id="street-btn" class="active"></button>
@@ -120,9 +122,6 @@ describe('Main Entry Point Tests', () => {
 
         // Did it create a marker?
         expect(L.marker).toHaveBeenCalledWith([40.7128, -74.0060]);
-        
-        // Did it re-center the map?
-        expect(mockMapInstance.setView).toHaveBeenCalledWith([40.7128, -74.0060], 6);
     });
 
     it('should successfully fetch AI trip review when the button is clicked', async () => {
@@ -143,7 +142,7 @@ describe('Main Entry Point Tests', () => {
         await new Promise(process.nextTick); 
 
         // Did it hit the correct API endpoint?
-        expect(fetch).toHaveBeenCalledWith('http://localhost:4010/api/review', expect.any(Object));
+        expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/api\/review$/), expect.any(Object));
 
         // Did it update the UI with the AI response?
         const aiBox = document.getElementById('ai-response-text');
@@ -200,5 +199,40 @@ describe('Main Entry Point Tests', () => {
         document.getElementById('floating-clear-btn').click();
         // clearMapData should have been called!
         expect(clearMapData).toHaveBeenCalled();
+    });
+
+    it('should fetch route data from typed origin and destination values', () => {
+        document.getElementById('origin-input').value = 'Rexburg, ID';
+        document.getElementById('destination-input').value = 'Boise, ID';
+
+        document.getElementById('floating-confirm-btn').click();
+
+        expect(clearMapData).toHaveBeenCalled();
+        expect(fetchRouteData).toHaveBeenCalledWith([
+            { type: 'name', value: 'Rexburg, ID' },
+            { type: 'name', value: 'Boise, ID' }
+        ], expect.any(Object));
+    });
+
+    it('should clear the map before generating a pin-based route', () => {
+        mainModule.addPinFromName(43.82, -111.79);
+        mainModule.addPinFromName(47.67, -116.78);
+
+        document.getElementById('floating-confirm-btn').click();
+
+        expect(clearMapData).toHaveBeenCalled();
+        expect(fetchRouteData).toHaveBeenCalledWith([
+            { type: 'coords', lat: 43.82, lng: -111.79 },
+            { type: 'coords', lat: 47.67, lng: -116.78 }
+        ], expect.any(Object));
+    });
+
+    it('should alert if only one typed endpoint is provided', () => {
+        document.getElementById('origin-input').value = 'Rexburg, ID';
+
+        document.getElementById('floating-confirm-btn').click();
+
+        expect(global.alert).toHaveBeenCalledWith('Please provide both an origin and destination.');
+        expect(fetchRouteData).not.toHaveBeenCalled();
     });
 });

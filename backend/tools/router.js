@@ -83,7 +83,13 @@ router.post("/route", async (req, res) => {
 
     } catch (err) {
         console.error("Route generation error:", err);
-        res.status(500).json({ error: "Failed to generate route data." });
+
+        const statusCode = Number.isInteger(err?.status) ? err.status : 500;
+        const message = statusCode === 500
+            ? "Failed to generate route data."
+            : (err?.message || "Failed to generate route data.");
+
+        res.status(statusCode).json({ error: message });
     }
 });
 

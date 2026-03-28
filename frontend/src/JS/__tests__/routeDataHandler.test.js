@@ -62,7 +62,7 @@ describe('Route Data Handler Tests', () => {
 
         // 1. Did it format the API call correctly?
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(fetch).toHaveBeenCalledWith('http://localhost:4010/api/route', {
+        expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/api\/route$/), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ locations: mockLocations })
@@ -94,7 +94,12 @@ describe('Route Data Handler Tests', () => {
                 { lat: 45.12, lng: -113.44 },
                 { lat: 46.55, lng: -115.02 }
             ],
-            weather: [{ name: 'Rexburg' }, { name: 'Midpoint' }]
+            weather: [
+                { name: 'Rexburg' },
+                { name: 'Salmon' },
+                { name: 'Lewiston' },
+                { name: 'Coeur d\'Alene' }
+            ]
         };
 
         fetch.mockResolvedValueOnce({
@@ -109,8 +114,8 @@ describe('Route Data Handler Tests', () => {
         expect(addEndpointPin).toHaveBeenNthCalledWith(2, 47.67, -116.78, 'destination');
         expect(addPinFromName).not.toHaveBeenCalled();
         expect(addSampledWaypoint).toHaveBeenCalledTimes(2);
-        expect(addSampledWaypoint).toHaveBeenNthCalledWith(1, 45.12, -113.44, 1);
-        expect(addSampledWaypoint).toHaveBeenNthCalledWith(2, 46.55, -115.02, 2);
+        expect(addSampledWaypoint).toHaveBeenNthCalledWith(1, 45.12, -113.44, 1, 'Salmon');
+        expect(addSampledWaypoint).toHaveBeenNthCalledWith(2, 46.55, -115.02, 2, 'Lewiston');
     });
 
     it('should show an alert and abort if the locations array is empty', async () => {

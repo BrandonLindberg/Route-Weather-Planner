@@ -75,4 +75,16 @@ describe('Route Service Tests', () => {
         // We expect your console.error to have fired with the exact text
         expect(consoleErrorSpy).toHaveBeenCalledWith('OSRM error:', 'No route found between coordinates');
     });
+
+    it('should throw if OSRM returns an empty routes array', async () => {
+        fetch.mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ routes: [] })
+        });
+
+        await expect(getRoute([
+            { lat: 43.82, lng: -111.79 },
+            { lat: 47.67, lng: -116.78 }
+        ])).rejects.toThrow('No drivable route found between selected points.');
+    });
 });

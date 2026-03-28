@@ -31,6 +31,8 @@ const DESTINATION_MARKER_COLOR = '#b9382b';
 let map;
 let markers = [];
 let currentTileLayer;
+const originInput = document.getElementById('origin-input');
+const destinationInput = document.getElementById('destination-input');
 
 function createColoredPinIcon(color) {
     const svg = `
@@ -52,11 +54,23 @@ function createColoredPinIcon(color) {
 }
 
 document.getElementById('floating-confirm-btn').addEventListener('click', planRoutePins);
-document.getElementById('floating-clear-btn').addEventListener('click', () => clearMapData(markers, map));
+document.getElementById('floating-clear-btn').addEventListener('click', clearMapAndInputs);
 document.getElementById('street-btn').addEventListener('click', () => switchLayer('street'));
 document.getElementById('satellite-btn').addEventListener('click', () => switchLayer('satellite'));
 document.getElementById('radar-btn').addEventListener('click', () => toggleRainRadar(map));
 document.getElementById('ai-btn').addEventListener('click', getTripReview);
+
+function clearMapAndInputs() {
+    clearMapData(markers, map);
+
+    if (originInput) {
+        originInput.value = '';
+    }
+
+    if (destinationInput) {
+        destinationInput.value = '';
+    }
+}
 
 // =========
 // Map Init
@@ -175,12 +189,11 @@ export function addPinFromName(lat, lng) {
         marker: marker,
         crds: crds
     });
-    
-    // Center the map on the new pin so the user sees it
+
     map.setView(crds, 6);
 }
 
-export function addSampledWaypoint(lat, lng, waypointNumber) {
+export function addSampledWaypoint(lat, lng, waypointNumber, locationName) {
     const crds = [lat, lng];
     const marker = L.circleMarker(crds, {
         radius: 5,
@@ -191,7 +204,11 @@ export function addSampledWaypoint(lat, lng, waypointNumber) {
         pane: 'markerPane'
     }).addTo(map);
 
-    marker.bindTooltip(`Waypoint ${waypointNumber}`, {
+    const tooltipLabel = locationName
+        ? `Waypoint ${waypointNumber}: ${locationName}`
+        : `Waypoint ${waypointNumber}`;
+
+    marker.bindTooltip(tooltipLabel, {
         direction: 'top',
         offset: [0, -8],
         opacity: 0.95,
@@ -224,11 +241,33 @@ export function addEndpointPin(lat, lng, role) {
 // TODO: We could add an option to calculate the gas needed for the trip based on the distance and average fuel efficiency which could be a fun addition for users planning their road trip budget.
 // TODO: We could also add an option to include rest stops or points of interest along the route, which could be a fun feature for users planning a road trip.
 function planRoutePins(){
-    const waypointCoords = markers.map(m => ({
-        type: "coords",
+    const origin = originInput ? originInput.value.trim() : '';
+    const destination = destinationInput ? destinationInput.value.trim() : '';
+    const typedLocationsProvided = origin.length > 0 || destination.length > 0;
+    const waypointCoords = markers.map((m) => ({
+        type: 'coords',
         lat: m.crds[0],
         lng: m.crds[1]
     }));
+
+    if (typedLocationsProvided && (!origin || !destination)) {
+        alert('Please provide both an origin and destination.');
+        return;
+    }
+
+    // Always clear existing route artifacts before generating a fresh route.
+    clearMapData(markers, map);
+
+    if (origin && destination) {
+        const routeLocations = [
+            { type: 'name', value: origin },
+            { type: 'name', value: destination }
+        ];
+
+        fetchRouteData(routeLocations, map);
+        return;
+    }
+
     fetchRouteData(waypointCoords, map);
 }
     
@@ -253,7 +292,7 @@ async function getTripReview() {
     }
 
     try {
-        const response = await fetch(`/api/review`, {
+        const response = await fetch(`${API_URL}/api/review`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
