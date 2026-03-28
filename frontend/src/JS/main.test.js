@@ -24,6 +24,10 @@ const mockMapInstance = {
     setView: vi.fn().mockReturnThis(),
     createPane: vi.fn(),
     getPane: vi.fn(() => ({ style: {} })),
+    getBoundsZoom: vi.fn(() => 4),
+    setMinZoom: vi.fn(),
+    getZoom: vi.fn(() => 13),
+    setZoom: vi.fn(),
     on: vi.fn(),
     removeLayer: vi.fn()
 };
@@ -37,6 +41,7 @@ vi.mock('leaflet', () => {
                     mergeOptions: vi.fn()
                 }
             },
+            latLngBounds: vi.fn((bounds) => bounds),
             map: vi.fn(() => mockMapInstance),
             tileLayer: vi.fn(() => ({ addTo: mockAddTo })),
             marker: vi.fn(() => ({ addTo: mockAddTo })),
@@ -102,7 +107,7 @@ describe('Main Entry Point Tests', () => {
             doubleClickZoom: false,
             zoomControl: false,
             minZoom: 3,
-            maxBounds: [[-85, -1000000], [85, 1000000]],
+            maxBounds: [[-85, -180], [85, 180]],
             maxBoundsViscosity: 1.0
         });
 
@@ -114,6 +119,7 @@ describe('Main Entry Point Tests', () => {
         
         // Did it set up the double-click listener for adding pins?
         expect(mockMapInstance.on).toHaveBeenCalledWith('dblclick', expect.any(Function));
+        expect(mockMapInstance.setMinZoom).toHaveBeenCalledWith(4);
     });
 
     it('should export and execute addPinFromName correctly', () => {

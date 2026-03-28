@@ -351,6 +351,7 @@ button {
 }
 
 #ai-response-text {
-    max-height: 250px; /* Limits the height of the text box itself */
-    overflow-y: auto;  /* Adds a vertical scrollbar if needed */
+    max-height: clamp(96px, 18vh, 150px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }

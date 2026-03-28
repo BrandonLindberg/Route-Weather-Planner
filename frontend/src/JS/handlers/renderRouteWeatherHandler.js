@@ -106,6 +106,12 @@ export function clearMapData(markers, map) {
     }
     clearWeatherData();
     document.getElementById('weather-section').style.display = 'none';
+
+    const aiOutputBox = document.getElementById('ai-response-text');
+    if (aiOutputBox) {
+        aiOutputBox.style.display = 'none';
+        aiOutputBox.innerText = '';
+    }
 }
 
 function clearWeatherData(){

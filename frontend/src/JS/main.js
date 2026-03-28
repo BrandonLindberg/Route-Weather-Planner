@@ -25,7 +25,8 @@ const API_URL = (RAW_API_URL && RAW_API_URL !== 'undefined' && RAW_API_URL !== '
     : '';
 const REVIEW_ENDPOINT = API_URL ? `${API_URL}/api/review` : '/api/review';
 const MIN_MAP_ZOOM = 3;
-const MAP_BOUNDS = [[-85, -1000000], [85, 1000000]];
+const MAP_BOUNDS = [[-85, -180], [85, 180]];
+const MAP_LATLNG_BOUNDS = L.latLngBounds(MAP_BOUNDS);
 const ORIGIN_MARKER_COLOR = '#1f7a39';
 const DESTINATION_MARKER_COLOR = '#b9382b';
 
@@ -92,16 +93,31 @@ function initMap() {
     currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         minZoom: MIN_MAP_ZOOM,
         maxZoom: 17,
+        noWrap: true,
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
     map.createPane('radarPane');
     map.getPane('radarPane').style.zIndex = 650;
 
+    clampMinZoomToWorldBounds();
+    map.on('resize', clampMinZoomToWorldBounds);
+
     setupOverlayInteractionGuards();
     
     // adds up to 5 markers
     map.on('dblclick', (e) => addPin(e));
+}
+
+function clampMinZoomToWorldBounds() {
+    const worldFitZoom = map.getBoundsZoom(MAP_LATLNG_BOUNDS, true);
+    const clampedMinZoom = Math.max(MIN_MAP_ZOOM, worldFitZoom);
+
+    map.setMinZoom(clampedMinZoom);
+
+    if (map.getZoom() < clampedMinZoom) {
+        map.setZoom(clampedMinZoom);
+    }
 }
 
 function setupOverlayInteractionGuards() {
@@ -133,6 +149,7 @@ function addStreetLayer() {
         {
             minZoom: MIN_MAP_ZOOM,
             maxZoom: 17,
+            noWrap: true,
             attribution: '© OpenStreetMap'
         }
     ).addTo(map);
@@ -153,6 +170,7 @@ function switchLayer(type) {
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         {
             minZoom: MIN_MAP_ZOOM,
+            noWrap: true,
             attribution: 'Tiles © Esri'
         }
     ).addTo(map);

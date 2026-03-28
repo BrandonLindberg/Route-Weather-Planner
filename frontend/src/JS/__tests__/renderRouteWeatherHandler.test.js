@@ -24,6 +24,7 @@ describe('Render Route & Weather Handler Tests', () => {
         // 2. Build the DOM *BEFORE* importing the module
         document.body.innerHTML = `
             <div id="weather-section" style="display: block;"></div>
+            <div id="ai-response-text" style="display: block;">Some prior AI response</div>
             <ul id="pin-list"></ul>
         `;
 
@@ -37,6 +38,9 @@ describe('Render Route & Weather Handler Tests', () => {
         // Reset the DOM state before each test
         document.getElementById('pin-list').innerHTML = '';
         document.getElementById('weather-section').style.display = 'block';
+        const aiOutputBox = document.getElementById('ai-response-text');
+        aiOutputBox.style.display = 'block';
+        aiOutputBox.innerText = 'Some prior AI response';
 
         // Setup a fake Leaflet map object
         mockMap = {
@@ -112,5 +116,10 @@ describe('Render Route & Weather Handler Tests', () => {
         // 4. Did it reset the pin list UI?
         const list = document.getElementById('pin-list');
         expect(list.innerHTML).toContain('No locations added yet.');
+
+        // 5. Did it clear and hide the AI review panel?
+        const aiOutputBox = document.getElementById('ai-response-text');
+        expect(aiOutputBox.style.display).toBe('none');
+        expect(aiOutputBox.innerText).toBe('');
     });
 });
