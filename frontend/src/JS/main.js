@@ -19,7 +19,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const API_URL = import.meta.env.VITE_API_URL
+const RAW_API_URL = `${import.meta.env.VITE_API_URL ?? ''}`.trim();
+const API_URL = (RAW_API_URL && RAW_API_URL !== 'undefined' && RAW_API_URL !== 'null')
+    ? RAW_API_URL.replace(/\/+$/, '')
+    : '';
+const REVIEW_ENDPOINT = API_URL ? `${API_URL}/api/review` : '/api/review';
 const MIN_MAP_ZOOM = 3;
 const MAP_BOUNDS = [[-85, -1000000], [85, 1000000]];
 const ORIGIN_MARKER_COLOR = '#1f7a39';
@@ -292,7 +296,7 @@ async function getTripReview() {
     }
 
     try {
-        const response = await fetch(`${API_URL}/api/review`, {
+        const response = await fetch(REVIEW_ENDPOINT, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -302,9 +306,16 @@ async function getTripReview() {
             })
         });
 
-        if (!response.ok) throw new Error(`Server Error: ${response.status}`);
+        let data = {};
+        try {
+            data = await response.json();
+        } catch {
+            data = {};
+        }
 
-        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data?.error || `Server Error: ${response.status}`);
+        }
         
         if(aiOutputBox) {
             aiOutputBox.innerText = data.review;
@@ -314,7 +325,7 @@ async function getTripReview() {
 
     } catch (error) {
         console.error("Error getting review:", error);
-        if(aiOutputBox) aiOutputBox.innerText = "Error: Could not reach the AI service.";
+        if(aiOutputBox) aiOutputBox.innerText = `Error: ${error?.message || 'Could not reach the AI service.'}`;
     }
 }
 

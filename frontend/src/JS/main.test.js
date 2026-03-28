@@ -157,14 +157,14 @@ describe('Main Entry Point Tests', () => {
         fetch.mockResolvedValueOnce({
             ok: false,
             status: 500,
-            json: () => Promise.resolve({})
+            json: () => Promise.resolve({ error: 'Failed to generate review.' })
         });
 
         document.getElementById('ai-btn').click();
         await new Promise(process.nextTick);
 
         const aiBox = document.getElementById('ai-response-text');
-        expect(aiBox.innerText).toBe('Error: Could not reach the AI service.');
+        expect(aiBox.innerText).toBe('Error: Failed to generate review.');
     });
 
     it('should fallback to alert when AI output box does not exist', async () => {

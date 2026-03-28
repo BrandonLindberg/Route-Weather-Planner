@@ -1,7 +1,10 @@
 import { renderRoute, renderWeatherUI } from "./renderRouteWeatherHandler.js";
 import { addPinFromName, addSampledWaypoint, addEndpointPin } from "../main.js";
 
-const API_URL = (import.meta.env.VITE_API_URL || '').trim();
+const RAW_API_URL = `${import.meta.env.VITE_API_URL ?? ''}`.trim();
+const API_URL = (RAW_API_URL && RAW_API_URL !== 'undefined' && RAW_API_URL !== 'null')
+    ? RAW_API_URL.replace(/\/+$/, '')
+    : '';
 const ROUTE_ENDPOINT = API_URL ? `${API_URL}/api/route` : '/api/route';
 
 export async function fetchRouteData(locations, map) {
