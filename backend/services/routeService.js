@@ -1,5 +1,5 @@
 const EXTERNAL_REQUEST_TIMEOUT_MS = 20000;
-const OSRM_BASE_URL = (process.env.OSRM_BASE_URL || 'http://10.0.0.2:5000').replace(/\/+$/, '');
+const OSRM_BASE_URL = (process.env.OSRM_BASE_URL || 'http://10.34.150.207:5000').replace(/\/+$/, '');
 const MAX_TIMEOUT_RETRIES = 1;
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = EXTERNAL_REQUEST_TIMEOUT_MS) {
