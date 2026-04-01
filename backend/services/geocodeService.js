@@ -1,3 +1,27 @@
+const EXTERNAL_REQUEST_TIMEOUT_MS = 12000;
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = EXTERNAL_REQUEST_TIMEOUT_MS) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        return await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+    } catch (error) {
+        if (error?.name === 'AbortError') {
+            const timeoutError = new Error('Geocoding request timed out. Please try again.');
+            timeoutError.status = 504;
+            throw timeoutError;
+        }
+
+        throw error;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
 async function geocodeName(name) {
     const query = `${name || ''}`.trim();
 
@@ -7,7 +31,7 @@ async function geocodeName(name) {
         throw err;
     }
 
-    const response = await fetch(
+    const response = await fetchWithTimeout(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`,
         {
             headers: {

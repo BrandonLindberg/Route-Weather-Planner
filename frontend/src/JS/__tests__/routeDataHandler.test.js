@@ -65,7 +65,8 @@ describe('Route Data Handler Tests', () => {
         expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/api\/route$/), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ locations: mockLocations })
+            body: JSON.stringify({ locations: mockLocations }),
+            signal: expect.any(AbortSignal)
         });
 
         // 2. Did it loop through coordinates and add pins?

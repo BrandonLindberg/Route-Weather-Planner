@@ -17,6 +17,7 @@ describe('Weather Service', () => {
         
         // Tell fetch to return our fake data instead of hitting the internet
         fetch.mockResolvedValue({
+            ok: true,
             json: () => Promise.resolve(fakeOpenWeatherData)
         });
 
@@ -33,6 +34,7 @@ describe('Weather Service', () => {
 
     it('should choose the forecast entry closest to the ETA timestamp', async () => {
         fetch.mockResolvedValueOnce({
+            ok: true,
             json: () => Promise.resolve({
                 city: { name: 'Boise', timezone: -21600 },
                 list: [
@@ -50,13 +52,14 @@ describe('Weather Service', () => {
         expect(result[0].weather[0].description).toBe('sunny');
     });
 
-    it('should return null item when forecast payload has no list', async () => {
+    it('should throw when forecast payload has no list', async () => {
         fetch.mockResolvedValueOnce({
+            ok: true,
             json: () => Promise.resolve({ city: { name: 'Nowhere' } })
         });
 
-        const result = await getWeather([{ lat: 0, lng: 0 }], [1710000000]);
-
-        expect(result).toEqual([null]);
+        await expect(getWeather([{ lat: 0, lng: 0 }], [1710000000]))
+            .rejects
+            .toThrow('Weather forecast data is unavailable for part of this route.');
     });
 });

@@ -50,7 +50,10 @@ describe('Route Service Tests', () => {
 
         // CRUCIAL: Did it format as Longitude,Latitude like OSRM expects?
         expect(fetch).toHaveBeenCalledWith(
-            'https://router.project-osrm.org/route/v1/driving/-111.79,43.82;-116.78,47.67?overview=full&geometries=geojson'
+            'https://router.project-osrm.org/route/v1/driving/-111.79,43.82;-116.78,47.67?overview=full&geometries=geojson',
+            {
+                signal: expect.any(AbortSignal)
+            }
         );
 
         // Did it return exactly the first route object?

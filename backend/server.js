@@ -15,7 +15,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader("Content-Security-Policy",
         "default-src 'self'; " +
-        "script-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' 'sha256-ZswfTY7H35rbv8WC7NXBoiC7WNu86vSzCDChNWwZZDM='; " +
         "style-src 'self' 'unsafe-inline'; " +
         "img-src 'self' data: https://*.tile.openstreetmap.org https://server.arcgisonline.com https://tilecache.rainviewer.com https://openweathermap.org; " +
         "connect-src 'self' https://api.rainviewer.com;"

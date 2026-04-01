@@ -1,15 +1,49 @@
 // TODO: Get predictive weather/temperature for each pin/waypoint and display it in the marker popup. We can use the OpenWeather API's "One Call" endpoint to get current weather and forecasts for each location. This would give users a better idea of what weather to expect at each point along their route, which could be especially helpful for longer trips with multiple stops. For the MVP, we'll just fetch the current weather for each pin when it's added to the map, but we could easily expand this in the future to include forecasts or even historical weather data for those interested in seeing typical conditions for their route.
 // TODO: We could get emergency alerts for each pin/waypoint and display them in the marker popup as well. This would be especially useful for users planning a trip through areas prone to severe weather or other hazards. We can use the OpenWeather API's "Alerts" endpoint to get any active alerts for each location and display them prominently in the popup. For the MVP, we'll focus on just fetching and displaying the current weather, but adding alerts would be a valuable enhancement for future iterations.
+const EXTERNAL_REQUEST_TIMEOUT_MS = 12000;
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = EXTERNAL_REQUEST_TIMEOUT_MS) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        return await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+    } catch (error) {
+        if (error?.name === 'AbortError') {
+            const timeoutError = new Error('Weather service timed out while loading route conditions.');
+            timeoutError.status = 504;
+            throw timeoutError;
+        }
+
+        throw error;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
 // Updated to accept the new 'etas' array
 async function getWeather(coords, etas) {
     return Promise.all(coords.map(async (c, i) => {
         const targetUnixTime = etas[i];
         
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${c.lat}&lon=${c.lng}&units=imperial&appid=${process.env.OPENWEATHER_API_KEY}`);
+        const response = await fetchWithTimeout(`https://api.openweathermap.org/data/2.5/forecast?lat=${c.lat}&lon=${c.lng}&units=imperial&appid=${process.env.OPENWEATHER_API_KEY}`);
+
+        if (!response.ok) {
+            const err = new Error('Weather service returned an unexpected response.');
+            err.status = 502;
+            throw err;
+        }
+
         const data = await response.json();
 
-        // Safety check
-        if (!data.list) return null;
+        if (!Array.isArray(data.list) || data.list.length === 0) {
+            const err = new Error('Weather forecast data is unavailable for part of this route.');
+            err.status = 502;
+            throw err;
+        }
 
         // Find the forecast block closest to our target ETA
         let closestForecast = data.list[0];

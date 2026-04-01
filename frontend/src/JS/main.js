@@ -19,16 +19,20 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
+const DEFAULT_LOCAL_API_URL = 'http://localhost:4010';
 const RAW_API_URL = `${import.meta.env.VITE_API_URL ?? ''}`.trim();
-const API_URL = (RAW_API_URL && RAW_API_URL !== 'undefined' && RAW_API_URL !== 'null')
+const hasConfiguredApiUrl = RAW_API_URL && RAW_API_URL !== 'undefined' && RAW_API_URL !== 'null';
+const isLocalhostHost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const API_URL = hasConfiguredApiUrl
     ? RAW_API_URL.replace(/\/+$/, '')
-    : '';
+    : (isLocalhostHost ? DEFAULT_LOCAL_API_URL : '');
 const REVIEW_ENDPOINT = API_URL ? `${API_URL}/api/review` : '/api/review';
 const MIN_MAP_ZOOM = 3;
 const MAP_BOUNDS = [[-85, -180], [85, 180]];
 const MAP_LATLNG_BOUNDS = L.latLngBounds(MAP_BOUNDS);
 const ORIGIN_MARKER_COLOR = '#1f7a39';
 const DESTINATION_MARKER_COLOR = '#b9382b';
+const REVIEW_REQUEST_TIMEOUT_MS = 15000;
 
 // ==============
 // Global States
@@ -361,15 +365,24 @@ async function getTripReview() {
     }
 
     try {
-        const response = await fetch(REVIEW_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                startCoords: startPin.join(', '),
-                endCoords: endPin.join(', '),
-                midCoords: midPins
-            })
-        });
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), REVIEW_REQUEST_TIMEOUT_MS);
+
+        let response;
+        try {
+            response = await fetch(REVIEW_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                signal: controller.signal,
+                body: JSON.stringify({ 
+                    startCoords: startPin.join(', '),
+                    endCoords: endPin.join(', '),
+                    midCoords: midPins
+                })
+            });
+        } finally {
+            clearTimeout(timeout);
+        }
 
         let data = {};
         try {
@@ -390,7 +403,11 @@ async function getTripReview() {
 
     } catch (error) {
         console.error("Error getting review:", error);
-        if(aiOutputBox) aiOutputBox.innerText = `Error: ${error?.message || 'Could not reach the AI service.'}`;
+        const errorMessage = error?.name === 'AbortError'
+            ? 'AI review timed out. Please try again.'
+            : (error?.message || 'Could not reach the AI service.');
+
+        if(aiOutputBox) aiOutputBox.innerText = `Error: ${errorMessage}`;
     }
 }
 

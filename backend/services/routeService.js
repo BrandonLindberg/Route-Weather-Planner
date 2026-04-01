@@ -1,3 +1,29 @@
+const EXTERNAL_REQUEST_TIMEOUT_MS = 20000;
+const OSRM_BASE_URL = (process.env.OSRM_BASE_URL || 'https://router.project-osrm.org').replace(/\/+$/, '');
+const MAX_TIMEOUT_RETRIES = 1;
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = EXTERNAL_REQUEST_TIMEOUT_MS) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+        return await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+    } catch (error) {
+        if (error?.name === 'AbortError') {
+            const timeoutError = new Error('Public OSRM routing service timed out while generating your trip. Please retry in a moment.');
+            timeoutError.status = 504;
+            throw timeoutError;
+        }
+
+        throw error;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
 async function getRoute(coords) {
     if (!Array.isArray(coords) || coords.length < 2) {
         const err = new Error("At least two valid locations are required to build a route.");
@@ -13,17 +39,34 @@ async function getRoute(coords) {
     }
 
     const coordString = coords.map(c => `${c.lng},${c.lat}`).join(';');
+    const routeUrl = `${OSRM_BASE_URL}/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
 
-    const routeResponse = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordString}?overview=full&geometries=geojson`); //Route generation
+    let routeResponse;
+    let attempts = 0;
 
-        if (!routeResponse.ok) {
-            const text = await routeResponse.text();
-            console.error('OSRM error:', text);
+    while (attempts <= MAX_TIMEOUT_RETRIES) {
+        try {
+            routeResponse = await fetchWithTimeout(routeUrl); //Route generation
+            break;
+        } catch (error) {
+            const isTimeout = Number.isInteger(error?.status) && error.status === 504;
+            if (!isTimeout || attempts >= MAX_TIMEOUT_RETRIES) {
+                throw error;
+            }
 
-            const err = new Error(`Routing failed: ${text}`);
-            err.status = 502;
-            throw err;
+            attempts += 1;
+            console.warn(`OSRM request timed out. Retrying (${attempts}/${MAX_TIMEOUT_RETRIES})...`);
         }
+    }
+
+    if (!routeResponse?.ok) {
+        const text = await routeResponse.text();
+        console.error('OSRM error:', text);
+
+        const err = new Error(`Routing failed: ${text}`);
+        err.status = 502;
+        throw err;
+    }
 
     const routeData = await routeResponse.json();
 

@@ -37,7 +37,8 @@ describe('Geocode Service Tests', () => {
                 headers: {
                     'User-Agent': 'SkyRoute/1.0 (Route Weather Planner)',
                     'Accept-Language': 'en-US,en;q=0.9'
-                }
+                },
+                signal: expect.any(AbortSignal)
             }
         );
         
