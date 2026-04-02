@@ -1,6 +1,10 @@
 const EXTERNAL_REQUEST_TIMEOUT_MS = 20000;
-const OSRM_BASE_URL = `http://10.34.151.5:5000`;
 const MAX_TIMEOUT_RETRIES = 1;
+
+function getOsrmBaseUrl() {
+    const ip = process.env.OSRM_ROUTER_IP?.trim();
+    return ip ? `http://${ip}:5000` : 'https://router.project-osrm.org';
+}
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = EXTERNAL_REQUEST_TIMEOUT_MS) {
     const controller = new AbortController();
@@ -39,7 +43,7 @@ async function getRoute(coords) {
     }
 
     const coordString = coords.map(c => `${c.lng},${c.lat}`).join(';');
-    const routeUrl = `${OSRM_BASE_URL}/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
+    const routeUrl = `${getOsrmBaseUrl()}/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
 
     let routeResponse;
     let attempts = 0;
