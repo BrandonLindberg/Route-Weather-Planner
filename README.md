@@ -20,8 +20,8 @@ Dev Tools: Visual Studio Code, GitHub
 * [X] Route Maker
 * [X] Weather Radar/Rain tracker
 * [X] Backend Server
-* [ ] AI Companion
-* [ ] Weather at Pins
+* [X] AI Companion
+* [X] Weather at Pins
 * [ ] Future Weather Analysis
 * [ ] Alt Routes
 
